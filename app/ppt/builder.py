@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
 from pptx import Presentation
@@ -28,6 +29,32 @@ def _set_bg(slide, rgb: tuple[int, int, int]) -> None:
     fill.fore_color.rgb = RGBColor(rgb[0], rgb[1], rgb[2])
 
 
+def _fetch_image(plan: SlidePlan, image_search, debug_images: bool) -> tuple[int, bytes | None]:
+    """Fetch a single image for a slide plan. Returns (index, image_bytes)."""
+    image_bytes = None
+    if plan.image_query and image_search is not None:
+        try:
+            if debug_images:
+                print(
+                    f"[builder] image_query='{plan.image_query[:120]}' slide='{plan.slide.title}'")
+            image_bytes = image_search.search_and_download(plan.image_query)
+            if debug_images:
+                if image_bytes:
+                    print(
+                        f"[builder] image_ok bytes={len(image_bytes)} slide='{plan.slide.title}'")
+                else:
+                    print(f"[builder] image_none slide='{plan.slide.title}'")
+        except Exception:
+            image_bytes = None
+            if debug_images:
+                print(f"[builder] image_error slide='{plan.slide.title}'")
+    elif debug_images and plan.image_query and image_search is None:
+        print(
+            f"[builder] image_search_disabled (no UNSPLASH_ACCESS_KEY) slide='{plan.slide.title}'")
+
+    return image_bytes
+
+
 def build_pptx(
     presentation_spec: PresentationSpec,
     slide_plans: list[SlidePlan],
@@ -47,32 +74,29 @@ def build_pptx(
     debug_images = (os.getenv("DEBUG_IMAGES", "").strip().lower()
                     in {"1", "true", "yes", "on"})
 
-    for plan in slide_plans:
+    # Pre-fetch all images in parallel
+    image_data: dict[int, bytes | None] = {}
+
+    if image_search is not None:
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_idx = {
+                executor.submit(_fetch_image, plan, image_search, debug_images): idx
+                for idx, plan in enumerate(slide_plans) if plan.image_query
+            }
+
+            for future in as_completed(future_to_idx):
+                idx = future_to_idx[future]
+                try:
+                    image_data[idx] = future.result()
+                except Exception:
+                    image_data[idx] = None
+
+    # Build slides with pre-fetched images
+    for idx, plan in enumerate(slide_plans):
         slide = prs.slides.add_slide(blank_layout)
         _set_bg(slide, theme.background_rgb)
 
-        image_bytes = None
-        if plan.image_query and image_search is not None:
-            try:
-                if debug_images:
-                    print(
-                        f"[builder] image_query='{plan.image_query[:120]}' slide='{plan.slide.title}'")
-                image_bytes = image_search.search_and_download(
-                    plan.image_query)
-                if debug_images:
-                    if image_bytes:
-                        print(
-                            f"[builder] image_ok bytes={len(image_bytes)} slide='{plan.slide.title}'")
-                    else:
-                        print(
-                            f"[builder] image_none slide='{plan.slide.title}'")
-            except Exception:
-                image_bytes = None
-                if debug_images:
-                    print(f"[builder] image_error slide='{plan.slide.title}'")
-        elif debug_images and plan.image_query and image_search is None:
-            print(
-                f"[builder] image_search_disabled (no UNSPLASH_ACCESS_KEY) slide='{plan.slide.title}'")
+        image_bytes = image_data.get(idx)
 
         if plan.layout == "title_full_image":
             layout_title_full_image(slide, plan.slide, theme, image_bytes)
