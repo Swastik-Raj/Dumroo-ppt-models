@@ -27,35 +27,72 @@ def add_flow_diagram(slide, nodes: list[str], edges: list[tuple[str, str]], styl
     if not nodes:
         return
 
+    # Standard slide dimensions
+    slide_width = Inches(10.0)
+    slide_height = Inches(7.5)
+
     # Calculate dynamic box sizes based on text length
-    def calculate_box_size(text: str) -> tuple[float, float]:
+    def calculate_box_size(text: str, num_nodes: int) -> tuple[float, float]:
         text_len = len(text)
-        # Width: base + extra for longer text
-        width = max(2.0, min(3.5, 2.0 + (text_len - 10) * 0.05))
-        # Height: taller if text is long (likely to wrap)
-        height = 1.0 if text_len <= 20 else 1.2
+        # Adjust max width based on number of nodes to fit more boxes
+        if num_nodes > 6:
+            max_width = 2.2
+            base_width = 1.8
+        else:
+            max_width = 2.8
+            base_width = 2.0
+
+        width = max(base_width, min(max_width, base_width + (text_len - 10) * 0.03))
+        height = 1.0 if text_len <= 20 else 1.1
         return Inches(width), Inches(height)
 
-    # Simple horizontal layout; wraps into two rows if needed.
-    max_per_row = 4
-    rows = (len(nodes) + max_per_row - 1) // max_per_row
-    rows = max(rows, 1)
+    # Adaptive layout based on number of nodes
+    node_count = len(nodes)
+    if node_count <= 4:
+        max_per_row = node_count
+    elif node_count <= 6:
+        max_per_row = 3
+    else:
+        max_per_row = 4
 
-    left = Inches(1.0)
-    top = Inches(2.0)
-    hgap = Inches(0.6)
-    vgap = Inches(0.8)
+    rows = (node_count + max_per_row - 1) // max_per_row
+
+    # Calculate average box size for spacing
+    avg_box_w = Inches(2.2)
+
+    # Adaptive margins and gaps based on number of nodes
+    if node_count > 6:
+        left = Inches(0.5)
+        top = Inches(2.0)
+        hgap = Inches(0.4)
+        vgap = Inches(0.6)
+    else:
+        left = Inches(0.8)
+        top = Inches(2.2)
+        hgap = Inches(0.5)
+        vgap = Inches(0.7)
 
     node_to_shape = {}
     node_positions = {}
 
-    # Calculate positions for all nodes first
+    # Calculate positions ensuring they fit within slide bounds
     for i, name in enumerate(nodes):
         r = i // max_per_row
         c = i % max_per_row
-        box_w, box_h = calculate_box_size(name)
-        x = left + c * (Inches(3.0) + hgap)
-        y = top + r * (Inches(1.2) + vgap)
+        box_w, box_h = calculate_box_size(name, node_count)
+
+        # Calculate x position with spacing
+        x = left + c * (avg_box_w + hgap)
+        y = top + r * (Inches(1.1) + vgap)
+
+        # Ensure box doesn't go off the right edge
+        if x + box_w > slide_width - Inches(0.3):
+            x = slide_width - box_w - Inches(0.3)
+
+        # Ensure box doesn't go off the bottom edge
+        if y + box_h > slide_height - Inches(0.3):
+            y = slide_height - box_h - Inches(0.3)
+
         node_positions[name] = (x, y, box_w, box_h)
 
     # Draw arrows FIRST (so they appear behind boxes)
