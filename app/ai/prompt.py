@@ -46,11 +46,12 @@ Constraints:
 - Use exactly {slide_count} slides.
 
 Content rules (VERY IMPORTANT):
-- Titles must be short (3–7 words) and specific.
-- For type "intro": 1–2 sentences, plain text.
-- For type "process": write 4–6 bullet points as newline-separated lines (no paragraphs). Example:
+- Titles must be short (3–7 words) and specific. Maximum 60 characters.
+- For type "intro": 1–2 sentences, plain text. Maximum 200 characters total.
+- For type "process": write 4–6 bullet points as newline-separated lines (no paragraphs). Each bullet maximum 100 characters. Example:
     "content": "- Bullet 1\n- Bullet 2\n- Bullet 3"
-- For type "summary": write 4–6 bullet points as newline-separated lines (no paragraphs).
+- For type "summary": write 4–6 bullet points as newline-separated lines (no paragraphs). Each bullet maximum 100 characters.
+- Keep all content concise and readable. Avoid overly long sentences.
 
 Image rules (VERY IMPORTANT):
 - For every slide except the flow diagram slide, include an `image_query` optimized for Unsplash (3–8 words).
