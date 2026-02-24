@@ -72,10 +72,10 @@ Diagram rules (VERY IMPORTANT):
 - Each edge array must have exactly 2 elements (source and destination).
 - If there is a branch, add at most one branch from a single node.
 - Example diagram:
-  {
+  {{
     "nodes": ["Input", "Process", "Validate", "Output"],
     "edges": [["Input", "Process"], ["Process", "Validate"], ["Validate", "Output"]]
-  }
+  }}
 
 Keywords rules:
 - Provide 4–8 keywords per slide.
