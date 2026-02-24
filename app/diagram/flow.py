@@ -24,16 +24,19 @@ def _set_rgb(color_format, rgb: tuple[int, int, int]) -> None:
 def add_flow_diagram(slide, nodes: list[str], edges: list[tuple[str, str]], style: FlowDiagramStyle | None = None) -> None:
     style = style or FlowDiagramStyle()
 
+    if not nodes:
+        return
+
     # Simple horizontal layout; wraps into two rows if needed.
     max_per_row = 4
     rows = (len(nodes) + max_per_row - 1) // max_per_row
     rows = max(rows, 1)
 
-    left = Inches(1.0)
+    left = Inches(1.2)
     top = Inches(2.0)
-    hgap = Inches(0.4)
-    vgap = Inches(0.6)
-    box_w = Inches(2.2)
+    hgap = Inches(0.5)
+    vgap = Inches(0.7)
+    box_w = Inches(2.4)
     box_h = Inches(0.9)
 
     node_to_shape = {}
@@ -55,11 +58,23 @@ def add_flow_diagram(slide, nodes: list[str], edges: list[tuple[str, str]], styl
 
         tf = shape.text_frame
         tf.clear()
+        tf.word_wrap = True
+        tf.vertical_anchor = 1
         p = tf.paragraphs[0]
+        p.alignment = 1
         run = p.add_run()
-        run.text = name
+
+        # Truncate long node names
+        node_text = name[:40] if len(name) > 40 else name
+        run.text = node_text
         run.font.name = style.font_name
-        run.font.size = Pt(style.font_size_pt)
+
+        # Auto-adjust font size for long text
+        if len(name) > 25:
+            run.font.size = Pt(14)
+        else:
+            run.font.size = Pt(style.font_size_pt)
+
         _set_rgb(run.font.color, style.text_rgb)
 
         node_to_shape[name] = shape

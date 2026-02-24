@@ -65,9 +65,17 @@ Image rules (VERY IMPORTANT):
 
 Diagram rules (VERY IMPORTANT):
 - Include at least 1 slide of type "flow".
-- For the flow slide: nodes must be 5–8 items and represent the real steps/components in order.
+- For the flow slide: nodes must be 4–6 items and represent the real steps/components in order.
+- Node names must be SHORT (1-3 words, max 25 characters each).
 - Edges must show direction and mostly be a left-to-right chain (A->B->C...).
+- Edges format: [["Node1", "Node2"], ["Node2", "Node3"], ...]
+- Each edge array must have exactly 2 elements (source and destination).
 - If there is a branch, add at most one branch from a single node.
+- Example diagram:
+  {
+    "nodes": ["Input", "Process", "Validate", "Output"],
+    "edges": [["Input", "Process"], ["Process", "Validate"], ["Validate", "Output"]]
+  }
 
 Keywords rules:
 - Provide 4–8 keywords per slide.

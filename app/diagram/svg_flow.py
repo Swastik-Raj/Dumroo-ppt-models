@@ -59,6 +59,9 @@ def render_flow_svg(
 
     # Adaptive layout: for 5-8 nodes, use smart positioning to prevent overlap
     node_count = len(nodes)
+    if node_count == 0:
+        return f'<svg xmlns="http://www.w3.org/2000/svg" width="{width_px}" height="{height_px}"><rect width="{width_px}" height="{height_px}" fill="{_rgb_to_hex(style.background_rgb)}"/></svg>'
+
     if node_count <= 4:
         max_per_row = node_count
     elif node_count <= 6:
@@ -71,13 +74,13 @@ def render_flow_svg(
 
     # Increase spacing to prevent arrow overlaps
     pad_x = 100
-    pad_y = 110
-    hgap = 80
-    vgap = 90
+    pad_y = 100
+    hgap = 90
+    vgap = 100
 
-    box_w = 320
-    box_h = 110
-    corner = 18
+    box_w = 300
+    box_h = 100
+    corner = 16
 
     # Compute required canvas and scale into requested width/height.
     needed_w = pad_x * 2 + cols * box_w + (cols - 1) * hgap
@@ -163,10 +166,12 @@ def render_flow_svg(
             f'rx="{corner}" ry="{corner}" fill="{node_fill}" stroke="{node_line}" stroke-width="4" />'
         )
 
-        lines = _wrap_words(name, max_chars=18)
+        # Truncate very long node names
+        node_name = name[:50] if len(name) > 50 else name
+        lines = _wrap_words(node_name, max_chars=20)
         # Center the block of lines.
-        font_size = 34
-        line_h = 40
+        font_size = 30
+        line_h = 36
         block_h = len(lines) * line_h
         start_y = y + (box_h - block_h) / 2 + font_size
 
