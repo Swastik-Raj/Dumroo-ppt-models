@@ -11,7 +11,7 @@ An AI-powered application that generates professional PowerPoint presentations f
 - Multiple professional themes available
 - AI-generated content and diagrams
 - Automatic image sourcing from Unsplash
-- Supabase database for temporary presentation storage
+- JSON file-based storage with automatic cleanup
 
 ## Setup
 
@@ -25,8 +25,6 @@ pip install -r requirements.txt
 2. Configure environment variables in `.env`:
 ```bash
 OPENAI_API_KEY=your_api_key_here
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 ### Frontend Setup
