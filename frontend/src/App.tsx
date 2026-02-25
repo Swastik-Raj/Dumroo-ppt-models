@@ -71,7 +71,7 @@ function App() {
               </svg>
             </div>
             <div className="logo-text">
-              <div className="logo-title">SlideGen.ai</div>
+              <div className="logo-title">SlideGeneration Platform</div>
               <div className="logo-subtitle">AI PowerPoint Generator</div>
             </div>
           </div>
@@ -93,7 +93,7 @@ function App() {
 
             <div className="input-section">
               <div className="form-group">
-                <label htmlFor="topic">Presentation Topic</label>
+                <label htmlFor="topic">Presentation Topic (*)</label>
                 <input
                   id="topic"
                   type="text"
