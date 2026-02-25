@@ -7,3 +7,4 @@ google-genai
 openai>=1.40
 cairosvg>=2.7
 python-dotenv>=1.0
+supabase>=2.0

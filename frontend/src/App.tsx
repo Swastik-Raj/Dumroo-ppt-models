@@ -1,5 +1,22 @@
 import { useState, useEffect } from 'react';
 import './App.css';
+import { SlidePreview } from './components/SlidePreview';
+
+interface Slide {
+  id: number;
+  type: string;
+  title: string;
+  content: string;
+  keywords: string[];
+  image_url: string | null;
+}
+
+interface PreviewData {
+  presentation_id: string;
+  topic: string;
+  theme: string;
+  slides: Slide[];
+}
 
 function App() {
   const [topic, setTopic] = useState('');
@@ -9,6 +26,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     fetch('http://localhost:8000/api/themes')
@@ -28,7 +47,7 @@ function App() {
     setSuccess(false);
 
     try {
-      const response = await fetch('http://localhost:8000/api/generate', {
+      const response = await fetch('http://localhost:8000/api/generate/preview', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -41,23 +60,53 @@ function App() {
         throw new Error(errorData.detail || 'Failed to generate presentation');
       }
 
+      const data = await response.json();
+      setPreviewData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!previewData) return;
+
+    setDownloading(true);
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/presentation/${previewData.presentation_id}/download`,
+        {
+          method: 'POST',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to download presentation');
+      }
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${topic.replace(/[^a-zA-Z0-9]/g, '_')}.pptx`;
+      a.download = `${previewData.topic.replace(/[^a-zA-Z0-9]/g, '_')}.pptx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
 
       setSuccess(true);
+      setPreviewData(null);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'Download failed');
     } finally {
-      setLoading(false);
+      setDownloading(false);
     }
+  };
+
+  const handleClosePreview = () => {
+    setPreviewData(null);
   };
 
   return (
@@ -135,7 +184,7 @@ function App() {
               </div>
 
               {error && <div className="error-message">{error}</div>}
-              {success && <div className="success-message">Presentation generated successfully!</div>}
+              {success && <div className="success-message">Presentation downloaded successfully!</div>}
 
               <button
                 className="generate-button"
@@ -145,7 +194,7 @@ function App() {
                 {loading ? (
                   <>
                     <div className="spinner"></div>
-                    Generating...
+                    Generating Preview...
                   </>
                 ) : (
                   <>
@@ -160,6 +209,25 @@ function App() {
           </div>
         </div>
       </main>
+
+      {previewData && (
+        <SlidePreview
+          presentationId={previewData.presentation_id}
+          topic={previewData.topic}
+          slides={previewData.slides}
+          onClose={handleClosePreview}
+          onDownload={handleDownload}
+        />
+      )}
+
+      {downloading && (
+        <div className="downloading-overlay">
+          <div className="downloading-message">
+            <div className="spinner-large"></div>
+            <p>Building your presentation...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

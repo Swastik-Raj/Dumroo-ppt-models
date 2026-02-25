@@ -5,10 +5,13 @@ An AI-powered application that generates professional PowerPoint presentations f
 ## Features
 
 - Web-based UI for easy presentation generation
+- Preview slides before downloading
+- Edit slide titles and content in the preview
 - Choose custom number of slides (3-20)
 - Multiple professional themes available
 - AI-generated content and diagrams
 - Automatic image sourcing from Unsplash
+- Supabase database for temporary presentation storage
 
 ## Setup
 
@@ -19,9 +22,11 @@ An AI-powered application that generates professional PowerPoint presentations f
 pip install -r requirements.txt
 ```
 
-2. Configure your OpenAI API key in `.env`:
+2. Configure environment variables in `.env`:
 ```bash
 OPENAI_API_KEY=your_api_key_here
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 ### Frontend Setup
@@ -60,7 +65,10 @@ The frontend will run on `http://localhost:5173`
 3. Choose the number of slides (default: 5)
 4. Select a theme from the dropdown
 5. Click "Generate Presentation"
-6. Your presentation will download automatically as a `.pptx` file
+6. Preview the generated slides
+7. Edit any slide by clicking the "Edit Slide" button
+8. Navigate between slides using the sidebar or Previous/Next buttons
+9. Click "Download Presentation" to get your `.pptx` file
 
 ## Available Themes
 
