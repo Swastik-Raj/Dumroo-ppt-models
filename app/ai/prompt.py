@@ -46,11 +46,12 @@ Constraints:
 - Use exactly {slide_count} slides.
 
 Content rules (VERY IMPORTANT):
-- Titles must be short (3–7 words) and specific.
-- For type "intro": 1–2 sentences, plain text.
-- For type "process": write 4–6 bullet points as newline-separated lines (no paragraphs). Example:
+- Titles must be short (3–7 words) and specific. Maximum 60 characters.
+- For type "intro": 1–2 sentences, plain text. Maximum 200 characters total.
+- For type "process": write 4–6 bullet points as newline-separated lines (no paragraphs). Each bullet maximum 100 characters. Example:
     "content": "- Bullet 1\n- Bullet 2\n- Bullet 3"
-- For type "summary": write 4–6 bullet points as newline-separated lines (no paragraphs).
+- For type "summary": write 4–6 bullet points as newline-separated lines (no paragraphs). Each bullet maximum 100 characters.
+- Keep all content concise and readable. Avoid overly long sentences.
 
 Image rules (VERY IMPORTANT):
 - For every slide except the flow diagram slide, include an `image_query` optimized for Unsplash (3–8 words).
@@ -64,9 +65,17 @@ Image rules (VERY IMPORTANT):
 
 Diagram rules (VERY IMPORTANT):
 - Include at least 1 slide of type "flow".
-- For the flow slide: nodes must be 5–8 items and represent the real steps/components in order.
+- For the flow slide: nodes must be 4–6 items and represent the real steps/components in order.
+- Node names must be SHORT (1-3 words, max 25 characters each).
 - Edges must show direction and mostly be a left-to-right chain (A->B->C...).
+- Edges format: [["Node1", "Node2"], ["Node2", "Node3"], ...]
+- Each edge array must have exactly 2 elements (source and destination).
 - If there is a branch, add at most one branch from a single node.
+- Example diagram:
+  {{
+    "nodes": ["Input", "Process", "Validate", "Output"],
+    "edges": [["Input", "Process"], ["Process", "Validate"], ["Validate", "Output"]]
+  }}
 
 Keywords rules:
 - Provide 4–8 keywords per slide.

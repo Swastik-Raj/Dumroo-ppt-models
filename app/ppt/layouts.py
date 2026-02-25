@@ -42,7 +42,7 @@ def _add_accent_bar(slide, theme: Theme) -> None:
 
 def _add_title(slide, title: str, theme: Theme) -> None:
     tb = slide.shapes.add_textbox(
-        Inches(0.7), Inches(0.35), Inches(12.0), Inches(0.9))
+        Inches(0.7), Inches(0.35), Inches(11.8), Inches(0.9))
     tf = tb.text_frame
     tf.clear()
     tf.word_wrap = True
@@ -50,9 +50,20 @@ def _add_title(slide, title: str, theme: Theme) -> None:
     p = tf.paragraphs[0]
     p.alignment = PP_ALIGN.LEFT
     run = p.add_run()
-    run.text = title
+
+    # Truncate very long titles
+    title_text = title[:120] if len(title) > 120 else title
+    run.text = title_text
     run.font.name = theme.font_title
-    run.font.size = Pt(40)
+
+    # Auto-reduce font size for long titles
+    if len(title) > 60:
+        run.font.size = Pt(32)
+    elif len(title) > 40:
+        run.font.size = Pt(36)
+    else:
+        run.font.size = Pt(40)
+
     _set_rgb(run.font.color, theme.title_rgb)
     try:
         p.space_after = Pt(4)
@@ -73,9 +84,20 @@ def _add_body(slide, text: str, theme: Theme, left, top, width, height) -> None:
     p = tf.paragraphs[0]
     p.alignment = PP_ALIGN.LEFT
     run = p.add_run()
-    run.text = text
+
+    # Truncate very long text to prevent overflow
+    text_content = text[:800] if len(text) > 800 else text
+    run.text = text_content
     run.font.name = theme.font_body
-    run.font.size = Pt(22)
+
+    # Auto-reduce font size for longer text
+    if len(text) > 500:
+        run.font.size = Pt(18)
+    elif len(text) > 300:
+        run.font.size = Pt(20)
+    else:
+        run.font.size = Pt(22)
+
     _set_rgb(run.font.color, theme.body_rgb)
 
 
@@ -99,12 +121,23 @@ def _add_bullets(slide, text: str, theme: Theme, left, top, width, height, *, fo
 
     # Auto-reduce font size if content is too long
     total_chars = sum(len(ln) for ln in lines)
-    if total_chars > 800 or len(lines) > 7:
+    num_lines = len(lines)
+
+    if total_chars > 1000 or num_lines > 8:
+        font_size = max(14, font_size - 6)
+    elif total_chars > 800 or num_lines > 7:
         font_size = max(16, font_size - 4)
-    elif total_chars > 500:
+    elif total_chars > 500 or num_lines > 6:
         font_size = max(18, font_size - 2)
 
-    for i, line in enumerate(lines[:8]):
+    # Limit bullets to prevent overflow
+    max_bullets = 8
+    if font_size <= 16:
+        max_bullets = 10
+    elif font_size >= 22:
+        max_bullets = 7
+
+    for i, line in enumerate(lines[:max_bullets]):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
         cleaned = line
         if cleaned.startswith("- "):
@@ -112,9 +145,10 @@ def _add_bullets(slide, text: str, theme: Theme, left, top, width, height, *, fo
         if cleaned.startswith("• "):
             cleaned = cleaned[2:].strip()
 
-        # Truncate overly long bullets to prevent overflow
-        if len(cleaned) > 120:
-            cleaned = cleaned[:117] + "..."
+        # Dynamic truncation based on font size
+        max_chars = 140 if font_size <= 16 else 110
+        if len(cleaned) > max_chars:
+            cleaned = cleaned[:max_chars - 3] + "..."
 
         p.text = f"• {cleaned}"
         p.level = 0
@@ -186,32 +220,56 @@ def layout_title_full_image(slide, slide_spec: SlideSpec, theme: Theme, image_by
 
         # White title on image.
         tb = slide.shapes.add_textbox(
-            Inches(0.9), Inches(1.8), Inches(11.6), Inches(1.4))
+            Inches(0.9), Inches(1.8), Inches(11.4), Inches(1.4))
         tf = tb.text_frame
         tf.clear()
+        tf.word_wrap = True
+        tf.vertical_anchor = MSO_ANCHOR.TOP
         p = tf.paragraphs[0]
         run = p.add_run()
-        run.text = slide_spec.title
+
+        # Truncate long titles
+        title_text = slide_spec.title[:100] if len(slide_spec.title) > 100 else slide_spec.title
+        run.text = title_text
         run.font.name = theme.font_title
-        run.font.size = Pt(54)
+
+        # Auto-adjust title size
+        if len(slide_spec.title) > 60:
+            run.font.size = Pt(42)
+        elif len(slide_spec.title) > 40:
+            run.font.size = Pt(48)
+        else:
+            run.font.size = Pt(54)
+
         _set_rgb(run.font.color, (255, 255, 255))
 
         subtitle = (slide_spec.content or "").strip()
         if subtitle:
+            # Truncate long subtitles
+            subtitle_text = subtitle[:250] if len(subtitle) > 250 else subtitle
+
             sb = slide.shapes.add_textbox(
-                Inches(0.95), Inches(3.25), Inches(11.4), Inches(1.3))
+                Inches(0.95), Inches(3.25), Inches(11.2), Inches(1.5))
             stf = sb.text_frame
             stf.clear()
+            stf.word_wrap = True
+            stf.vertical_anchor = MSO_ANCHOR.TOP
             sp = stf.paragraphs[0]
             srun = sp.add_run()
-            srun.text = subtitle
+            srun.text = subtitle_text
             srun.font.name = theme.font_body
-            srun.font.size = Pt(24)
+
+            # Auto-adjust subtitle size
+            if len(subtitle) > 150:
+                srun.font.size = Pt(20)
+            else:
+                srun.font.size = Pt(24)
+
             _set_rgb(srun.font.color, (229, 231, 235))
     else:
         _add_title(slide, slide_spec.title, theme)
         _add_body(slide, slide_spec.content, theme, Inches(
-            0.9), Inches(1.5), Inches(11.8), Inches(5.5))
+            0.9), Inches(1.5), Inches(11.6), Inches(5.5))
 
 
 def layout_image_left_text_right(slide, slide_spec: SlideSpec, theme: Theme, image_bytes: bytes | None) -> None:
@@ -223,8 +281,8 @@ def layout_image_left_text_right(slide, slide_spec: SlideSpec, theme: Theme, ima
         MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE,
         Inches(6.55),
         Inches(1.55),
-        Inches(6.35),
-        Inches(5.75),
+        Inches(6.2),
+        Inches(5.6),
     )
     panel.fill.solid()
     _set_rgb(panel.fill.fore_color, panel_fill)
@@ -237,7 +295,7 @@ def layout_image_left_text_right(slide, slide_spec: SlideSpec, theme: Theme, ima
             Inches(0.75),
             Inches(1.55),
             Inches(5.6),
-            Inches(5.75),
+            Inches(5.6),
         )
         img_card.fill.solid()
         _set_rgb(img_card.fill.fore_color, panel_fill)
@@ -245,11 +303,11 @@ def layout_image_left_text_right(slide, slide_spec: SlideSpec, theme: Theme, ima
         _set_rgb(img_card.line.color, panel_border)
 
         _add_image_fit(slide, image_bytes, Inches(
-            0.9), Inches(1.7), Inches(5.25), Inches(5.45))
+            0.9), Inches(1.7), Inches(5.25), Inches(5.3))
 
     # Better text spacing / size with explicit bullets.
     _add_bullets(slide, slide_spec.content, theme, Inches(
-        6.8), Inches(1.75), Inches(5.85), Inches(5.4), font_size=22)
+        6.75), Inches(1.75), Inches(5.75), Inches(5.25), font_size=20)
 
 
 def layout_diagram_center(slide, slide_spec: SlideSpec, theme: Theme, *, diagram_engine: str = "svg") -> None:
@@ -280,8 +338,8 @@ def layout_diagram_center(slide, slide_spec: SlideSpec, theme: Theme, *, diagram
             MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE,
             Inches(0.75),
             Inches(1.55),
-            Inches(12.35),
-            Inches(4.95),
+            Inches(12.2),
+            Inches(4.85),
         )
         card.fill.solid()
         _set_rgb(card.fill.fore_color, panel_fill)
@@ -290,7 +348,7 @@ def layout_diagram_center(slide, slide_spec: SlideSpec, theme: Theme, *, diagram
 
         if diagram_png:
             _add_picture_bytes(slide, diagram_png, Inches(
-                1.0), Inches(1.75), Inches(11.85), Inches(4.55))
+                1.0), Inches(1.75), Inches(11.7), Inches(4.45))
         else:
             add_flow_diagram(
                 slide,
@@ -307,8 +365,10 @@ def layout_diagram_center(slide, slide_spec: SlideSpec, theme: Theme, *, diagram
     # Small caption under diagram
     caption = (slide_spec.content or "").strip()
     if caption:
-        _add_body(slide, caption, theme, Inches(0.9),
-                  Inches(6.65), Inches(12.0), Inches(0.7))
+        # Truncate long captions
+        caption_text = caption[:300] if len(caption) > 300 else caption
+        _add_body(slide, caption_text, theme, Inches(0.9),
+                  Inches(6.6), Inches(11.8), Inches(0.75))
 
 
 def layout_bullets(slide, slide_spec: SlideSpec, theme: Theme) -> None:
@@ -320,8 +380,8 @@ def layout_bullets(slide, slide_spec: SlideSpec, theme: Theme) -> None:
         MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE,
         Inches(0.75),
         Inches(1.55),
-        Inches(12.35),
-        Inches(5.75),
+        Inches(12.2),
+        Inches(5.6),
     )
     panel.fill.solid()
     _set_rgb(panel.fill.fore_color, panel_fill)
@@ -329,4 +389,4 @@ def layout_bullets(slide, slide_spec: SlideSpec, theme: Theme) -> None:
     _set_rgb(panel.line.color, panel_border)
 
     _add_bullets(slide, slide_spec.content, theme, Inches(
-        1.0), Inches(1.7), Inches(11.9), Inches(5.5), font_size=24)
+        1.0), Inches(1.7), Inches(11.7), Inches(5.35), font_size=22)

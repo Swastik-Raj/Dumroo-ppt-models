@@ -24,67 +24,100 @@ def _set_rgb(color_format, rgb: tuple[int, int, int]) -> None:
 def add_flow_diagram(slide, nodes: list[str], edges: list[tuple[str, str]], style: FlowDiagramStyle | None = None) -> None:
     style = style or FlowDiagramStyle()
 
-    # Simple horizontal layout; wraps into two rows if needed.
-    max_per_row = 4
-    rows = (len(nodes) + max_per_row - 1) // max_per_row
-    rows = max(rows, 1)
+    if not nodes:
+        return
 
-    left = Inches(1.0)
-    top = Inches(2.0)
-    hgap = Inches(0.4)
-    vgap = Inches(0.6)
-    box_w = Inches(2.2)
-    box_h = Inches(0.9)
+    # Standard slide dimensions
+    slide_width = Inches(10.0)
+    slide_height = Inches(7.5)
+
+    # Calculate dynamic box sizes based on text length
+    def calculate_box_size(text: str, num_nodes: int) -> tuple[float, float]:
+        text_len = len(text)
+        # Adjust max width based on number of nodes to fit more boxes
+        if num_nodes > 6:
+            max_width = 2.2
+            base_width = 1.8
+        else:
+            max_width = 2.8
+            base_width = 2.0
+
+        width = max(base_width, min(max_width, base_width + (text_len - 10) * 0.03))
+        height = 1.0 if text_len <= 20 else 1.1
+        return Inches(width), Inches(height)
+
+    # Adaptive layout based on number of nodes
+    node_count = len(nodes)
+    if node_count <= 4:
+        max_per_row = node_count
+    elif node_count <= 6:
+        max_per_row = 3
+    else:
+        max_per_row = 4
+
+    rows = (node_count + max_per_row - 1) // max_per_row
+
+    # Calculate average box size for spacing
+    avg_box_w = Inches(2.2)
+
+    # Adaptive margins and gaps based on number of nodes
+    if node_count > 6:
+        left = Inches(0.5)
+        top = Inches(2.0)
+        hgap = Inches(0.4)
+        vgap = Inches(0.6)
+    else:
+        left = Inches(0.8)
+        top = Inches(2.2)
+        hgap = Inches(0.5)
+        vgap = Inches(0.7)
 
     node_to_shape = {}
+    node_positions = {}
 
+    # Calculate positions ensuring they fit within slide bounds
     for i, name in enumerate(nodes):
         r = i // max_per_row
         c = i % max_per_row
-        x = left + c * (box_w + hgap)
-        y = top + r * (box_h + vgap)
+        box_w, box_h = calculate_box_size(name, node_count)
 
-        shape = slide.shapes.add_shape(
-            MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, x, y, box_w, box_h)
-        fill = shape.fill
-        fill.solid()
-        _set_rgb(fill.fore_color, style.node_fill_rgb)
+        # Calculate x position with spacing
+        x = left + c * (avg_box_w + hgap)
+        y = top + r * (Inches(1.1) + vgap)
 
-        shape.line.width = Pt(2)
-        _set_rgb(shape.line.color, style.node_line_rgb)
+        # Ensure box doesn't go off the right edge
+        if x + box_w > slide_width - Inches(0.3):
+            x = slide_width - box_w - Inches(0.3)
 
-        tf = shape.text_frame
-        tf.clear()
-        p = tf.paragraphs[0]
-        run = p.add_run()
-        run.text = name
-        run.font.name = style.font_name
-        run.font.size = Pt(style.font_size_pt)
-        _set_rgb(run.font.color, style.text_rgb)
+        # Ensure box doesn't go off the bottom edge
+        if y + box_h > slide_height - Inches(0.3):
+            y = slide_height - box_h - Inches(0.3)
 
-        node_to_shape[name] = shape
+        node_positions[name] = (x, y, box_w, box_h)
 
-    # Arrows/connectors between centers.
+    # Draw arrows FIRST (so they appear behind boxes)
     for src, dst in edges:
-        a = node_to_shape.get(src)
-        b = node_to_shape.get(dst)
-        if not a or not b:
+        if src not in node_positions or dst not in node_positions:
             continue
 
-        ax = a.left + a.width // 2
-        ay = a.top + a.height // 2
-        bx = b.left + b.width // 2
-        by = b.top + b.height // 2
+        ax, ay, aw, ah = node_positions[src]
+        bx, by, bw, bh = node_positions[dst]
+
+        # Calculate center points
+        acx = ax + aw // 2
+        acy = ay + ah // 2
+        bcx = bx + bw // 2
+        bcy = by + bh // 2
 
         conn = slide.shapes.add_connector(
-            MSO_CONNECTOR.STRAIGHT, ax, ay, bx, by)
-        conn.line.width = Pt(2)
+            MSO_CONNECTOR.STRAIGHT, acx, acy, bcx, bcy)
+        conn.line.width = Pt(2.5)
         _set_rgb(conn.line.color, style.node_line_rgb)
 
         # python-pptx 1.0.x doesn't expose arrowhead enums; simulate arrowheads
         # with a small rotated triangle shape placed near the destination.
-        dx = float(bx - ax)
-        dy = float(by - ay)
+        dx = float(bcx - acx)
+        dy = float(bcy - acy)
         if abs(dx) + abs(dy) < 1.0:
             continue
 
@@ -97,8 +130,8 @@ def add_flow_diagram(slide, nodes: list[str], edges: list[tuple[str, str]], styl
         ux = dx / length
         uy = dy / length
 
-        cx = bx - int(ux * float(backoff))
-        cy = by - int(uy * float(backoff))
+        cx = bcx - int(ux * float(backoff))
+        cy = bcy - int(uy * float(backoff))
 
         tri_left = int(cx - size / 2)
         tri_top = int(cy - size / 2)
@@ -114,3 +147,41 @@ def add_flow_diagram(slide, nodes: list[str], edges: list[tuple[str, str]], styl
         tri.fill.solid()
         _set_rgb(tri.fill.fore_color, style.node_line_rgb)
         tri.line.fill.background()
+
+    # Now draw boxes on top of arrows
+    for i, name in enumerate(nodes):
+        x, y, box_w, box_h = node_positions[name]
+
+        shape = slide.shapes.add_shape(
+            MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, x, y, box_w, box_h)
+        fill = shape.fill
+        fill.solid()
+        _set_rgb(fill.fore_color, style.node_fill_rgb)
+
+        shape.line.width = Pt(2.5)
+        _set_rgb(shape.line.color, style.node_line_rgb)
+
+        tf = shape.text_frame
+        tf.clear()
+        tf.word_wrap = True
+        tf.vertical_anchor = 1
+        p = tf.paragraphs[0]
+        p.alignment = 1
+        run = p.add_run()
+
+        # Truncate long node names
+        node_text = name[:50] if len(name) > 50 else name
+        run.text = node_text
+        run.font.name = style.font_name
+
+        # Auto-adjust font size for long text
+        if len(name) > 25:
+            run.font.size = Pt(14)
+        elif len(name) > 15:
+            run.font.size = Pt(15)
+        else:
+            run.font.size = Pt(style.font_size_pt)
+
+        _set_rgb(run.font.color, style.text_rgb)
+
+        node_to_shape[name] = shape

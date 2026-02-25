@@ -84,7 +84,7 @@ class UnsplashImageSearch:
         url = "https://api.unsplash.com/search/photos"
         params = {
             "query": query,
-            "per_page": 20,
+            "per_page": 10,
             "orientation": "landscape",
             "content_filter": "high",
         }
@@ -92,16 +92,17 @@ class UnsplashImageSearch:
 
         last_err: Exception | None = None
         data = None
-        for attempt in range(3):
+        for attempt in range(2):
             try:
                 r = requests.get(url, params=params,
-                                 headers=headers, timeout=20)
+                                 headers=headers, timeout=10)
                 r.raise_for_status()
                 data = r.json()
                 break
             except RequestException as e:
                 last_err = e
-                time.sleep(0.4 * (attempt + 1))
+                if attempt == 0:
+                    time.sleep(0.3)
         if data is None:
             if self._debug() and last_err is not None:
                 print(
@@ -165,24 +166,20 @@ class UnsplashImageSearch:
             if qq and qq not in candidates:
                 candidates.append(qq)
 
-        add_terms(uniq[:6])
+        # Reduce fallback queries for faster performance
         add_terms(uniq[:4])
         add_terms(uniq[:3])
 
-        # Heuristic fallbacks for common business/process topics.
+        # Heuristic fallbacks for common business/process topics (limited)
         token_set = set(uniq)
         if {"onboarding", "signup", "sign", "registration", "account", "verify", "verification"} & token_set:
             add_terms(["business", "onboarding"])
-            add_terms(["team", "onboarding"])
-            add_terms(["office", "team"])
         if {"process", "workflow", "flow", "steps", "journey"} & token_set:
             add_terms(["business", "workflow"])
-            add_terms(["workflow"])
-            add_terms(["business", "process"])
 
         # Always end with a guaranteed broad query.
         add_terms(["abstract", "background"])
-        return candidates
+        return candidates[:5]
 
     def download(self, url: str) -> bytes:
         cached = self.cache.get(url)
@@ -191,11 +188,11 @@ class UnsplashImageSearch:
 
         # Some CDNs are picky; send a generic UA.
         last_err: Exception | None = None
-        for attempt in range(3):
+        for attempt in range(2):
             try:
                 r = requests.get(
                     url,
-                    timeout=30,
+                    timeout=15,
                     headers={"User-Agent": "ppt-generator/1.0"},
                 )
                 r.raise_for_status()
@@ -203,7 +200,8 @@ class UnsplashImageSearch:
                 break
             except RequestException as e:
                 last_err = e
-                time.sleep(0.4 * (attempt + 1))
+                if attempt == 0:
+                    time.sleep(0.3)
         else:
             raise last_err or RuntimeError("Download failed")
         self.cache.set(url, data)
