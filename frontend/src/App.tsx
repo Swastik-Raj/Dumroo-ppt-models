@@ -1,11 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 
-interface Template {
-  id: string;
-  name: string;
-  selected: boolean;
+interface Slide {
+  id: number;
+  type: string;
+  title: string;
+  content: string;
+  keywords: string[];
+  image_url: string | null;
 }
+
+interface PreviewData {
+  presentation_id: string;
+  topic: string;
+  theme: string;
+  slides: Slide[];
+}
+
+const API_URL = 'http://localhost:8000';
 
 function App() {
   const [showInputPanel, setShowInputPanel] = useState(true);
@@ -20,13 +32,100 @@ function App() {
   const [useGeneralKnowledge, setUseGeneralKnowledge] = useState(false);
   const [customInstructions, setCustomInstructions] = useState('');
   const [additionalCriteria, setAdditionalCriteria] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState('clyde');
+  const [selectedTemplate, setSelectedTemplate] = useState('Education Light');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [themes, setThemes] = useState<string[]>([]);
 
-  const templates: Template[] = [
-    { id: 'clyde', name: 'CLYDE', selected: true },
-    { id: 'eddy', name: 'EDDY', selected: false },
-    { id: 'nadia', name: 'NADIA', selected: false },
-  ];
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/themes`)
+      .then(res => res.json())
+      .then(data => {
+        setThemes(data.themes);
+        if (data.themes.length > 0) {
+          setSelectedTemplate(data.themes[0]);
+        }
+      })
+      .catch(err => console.error('Failed to fetch themes:', err));
+  }, []);
+
+  const handleGenerate = async () => {
+    if (!topic.trim()) {
+      setError('Please enter content for your presentation');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setPreviewData(null);
+
+    try {
+      const slideCount = parseInt(slides) || 10;
+
+      const response = await fetch(`${API_URL}/api/generate/preview`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          topic: topic,
+          slide_count: slideCount,
+          theme: selectedTemplate,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to generate presentation');
+      }
+
+      const data = await response.json();
+      setPreviewData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while generating the presentation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!previewData) return;
+
+    setDownloading(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/api/presentation/${previewData.presentation_id}/download`,
+        {
+          method: 'POST',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to download presentation');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${previewData.topic.replace(/[^a-zA-Z0-9]/g, '_')}.pptx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      setPreviewData(null);
+      setTopic('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Download failed');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
 
   return (
     <div className="app">
@@ -143,32 +242,16 @@ function App() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Choose a Template</label>
-                  <div className="template-grid">
-                    {templates.map((template) => (
-                      <div
-                        key={template.id}
-                        className={`template-card ${selectedTemplate === template.id ? 'selected' : ''}`}
-                        onClick={() => setSelectedTemplate(template.id)}
-                      >
-                        {selectedTemplate === template.id && (
-                          <div className="template-check">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                              <circle cx="12" cy="12" r="10" fill="#4A7FFF"/>
-                              <path d="M8 12l3 3 5-6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          </div>
-                        )}
-                        <div className={`template-preview ${template.id}`}>
-                          <div className="template-content">
-                            <div className="template-title">Presentation title</div>
-                            <div className="template-subtitle">Presentation subtitle</div>
-                          </div>
-                        </div>
-                        <div className="template-name">{template.name}</div>
-                      </div>
+                  <label className="form-label">Choose a Theme</label>
+                  <select
+                    className="form-select"
+                    value={selectedTemplate}
+                    onChange={(e) => setSelectedTemplate(e.target.value)}
+                  >
+                    {themes.map((theme) => (
+                      <option key={theme} value={theme}>{theme}</option>
                     ))}
-                  </div>
+                  </select>
                 </div>
 
                 <div className="form-row">
@@ -287,11 +370,30 @@ function App() {
                   />
                 </div>
 
-                <button className="create-button">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Create Presentation
+                {error && (
+                  <div className="error-message">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  className="create-button"
+                  onClick={handleGenerate}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <div className="spinner"></div>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Create Presentation
+                    </>
+                  )}
                 </button>
               </div>
             )}
@@ -310,16 +412,60 @@ function App() {
           </div>
 
           <div className="preview-content">
-            <div className="preview-empty">
-              <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#9CA3AF" strokeWidth="1.5" fill="none"/>
-                <circle cx="12" cy="12" r="3" stroke="#9CA3AF" strokeWidth="1.5" fill="none"/>
-              </svg>
-              <p className="preview-empty-text">AI responses will appear here for preview and formatting</p>
-            </div>
+            {previewData ? (
+              <div className="preview-data">
+                <h3 className="preview-title">{previewData.topic}</h3>
+                <p className="preview-meta">
+                  Theme: {previewData.theme} • {previewData.slides.length} slides
+                </p>
+                <div className="preview-slides">
+                  {previewData.slides.map((slide) => (
+                    <div key={slide.id} className="preview-slide-item">
+                      <div className="preview-slide-number">{slide.id}</div>
+                      <div className="preview-slide-info">
+                        <div className="preview-slide-title">{slide.title}</div>
+                        <div className="preview-slide-type">{slide.type}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button className="download-button" onClick={handleDownload} disabled={downloading}>
+                  {downloading ? (
+                    <>
+                      <div className="spinner"></div>
+                      Downloading...
+                    </>
+                  ) : (
+                    <>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Download Presentation
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <div className="preview-empty">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#9CA3AF" strokeWidth="1.5" fill="none"/>
+                  <circle cx="12" cy="12" r="3" stroke="#9CA3AF" strokeWidth="1.5" fill="none"/>
+                </svg>
+                <p className="preview-empty-text">AI responses will appear here for preview and formatting</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {downloading && (
+        <div className="downloading-overlay">
+          <div className="downloading-message">
+            <div className="spinner-large"></div>
+            <p>Building your presentation...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
