@@ -14,7 +14,9 @@ def user_prompt(topic: str, slide_count: int) -> str:
     domain_hints = _detect_domain_hints(topic)
 
     return f"""
-Create a slide deck about: {topic}
+Analyze the following content and create a professional slide deck. The content may be a topic, lesson plan, course material, or detailed text:
+
+{topic}
 
 {domain_hints}
 
@@ -46,12 +48,16 @@ Constraints:
 - Use exactly {slide_count} slides.
 
 Content rules (VERY IMPORTANT):
+- Analyze the provided content carefully and extract the most important points
+- If the content is a lesson plan, identify key learning objectives, topics, and concepts
+- If the content is plain text, break it down into logical sections that fit the slide format
 - Titles must be short (3–7 words) and specific. Maximum 60 characters.
 - For type "intro": 1–2 sentences, plain text. Maximum 200 characters total.
 - For type "process": write 4–6 bullet points as newline-separated lines (no paragraphs). Each bullet maximum 100 characters. Example:
     "content": "- Bullet 1\n- Bullet 2\n- Bullet 3"
 - For type "summary": write 4–6 bullet points as newline-separated lines (no paragraphs). Each bullet maximum 100 characters.
 - Keep all content concise and readable. Avoid overly long sentences.
+- Preserve key information from the original content while making it presentation-friendly
 
 Image rules (VERY IMPORTANT):
 - For every slide except the flow diagram slide, include an `image_query` optimized for Unsplash (3–8 words).
@@ -89,6 +95,18 @@ Ordering rules:
 def _detect_domain_hints(topic: str) -> str:
     """Generate adaptive instructions based on topic domain."""
     topic_lower = topic.lower()
+
+    # Lesson plan detection
+    if any(word in topic_lower for word in ["lesson plan", "learning objective", "students will", "grade", "curriculum", "classroom", "homework"]):
+        return (
+            "Domain: Education/Lesson Plan\n"
+            "- Extract key learning objectives and structure them as slide topics\n"
+            "- Break down lesson activities into clear, sequential steps\n"
+            "- Highlight main concepts, vocabulary, and takeaways\n"
+            "- Use educational imagery (classroom, students, books, learning)\n"
+            "- For flow diagrams, show the lesson progression or concept relationships\n"
+            "- Image style should be 'educational', 'bright', 'engaging', 'classroom'"
+        )
 
     # Historical/events
     if any(word in topic_lower for word in ["history", "war", "independence", "revolution", "invention", "discovery"]):

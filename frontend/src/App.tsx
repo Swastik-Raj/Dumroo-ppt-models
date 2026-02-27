@@ -54,7 +54,7 @@ function App() {
 
   const handleGenerate = async () => {
     if (!topic.trim()) {
-      setError('Please enter content for your presentation');
+      setError('Please enter content for your presentation (lesson plan, topic, or any text)');
       return;
     }
 
@@ -183,7 +183,9 @@ function App() {
                   <circle cx="32" cy="10" r="3" stroke="#9CA3AF" strokeWidth="2" fill="none"/>
                 </svg>
               </div>
-              <p className="empty-state-text">Create engaging slide presentations and visual aids.</p>
+              <p className="empty-state-text">
+                Transform your lesson plans, course outlines, or any text into professional presentation slides automatically.
+              </p>
             </div>
 
             <div className="toggle-panel-section">
@@ -231,14 +233,25 @@ function App() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Content (Plain Text)</label>
+                  <label className="form-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" fill="none"/>
+                      <polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="2" fill="none"/>
+                      <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="2"/>
+                      <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="2"/>
+                    </svg>
+                    Content (Plain Text)
+                  </label>
                   <textarea
                     className="form-textarea"
-                    placeholder="Enter the content for your presentation..."
+                    placeholder="Enter your content here... You can paste a lesson plan, course outline, topic description, or any text you want to convert into slides."
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
-                    rows={4}
+                    rows={6}
                   />
+                  <small style={{ fontSize: '0.8125rem', color: 'var(--text-tertiary)', marginTop: 'var(--space-1)' }}>
+                    Paste lesson plans, course materials, or any text. The AI will automatically structure it into presentation slides.
+                  </small>
                 </div>
 
                 <div className="form-group">
