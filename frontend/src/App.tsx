@@ -54,9 +54,12 @@ function App() {
       .then(res => res.json())
       .then(data => {
         console.log('Themes data received:', data);
-        setThemes(data.themes);
-        if (data.themes.length > 0) {
-          setSelectedTemplate(data.themes[0].name);
+        console.log('First theme:', data.themes?.[0]);
+        if (data.themes && Array.isArray(data.themes)) {
+          setThemes(data.themes);
+          if (data.themes.length > 0) {
+            setSelectedTemplate(data.themes[0].name);
+          }
         }
       })
       .catch(err => console.error('Failed to fetch themes:', err));
@@ -277,15 +280,15 @@ function App() {
                     </div>
                   ) : (
                     <div className="templates-grid">
-                      {themes.map((theme) => (
+                      {themes.map((theme, index) => (
                         <TemplateCard
-                          key={theme.name}
-                          name={theme.name}
-                          titleColor={theme.title_color}
-                          backgroundColor={theme.background_color}
-                          accentColor={theme.accent_color}
-                          isSelected={selectedTemplate === theme.name}
-                          onClick={() => setSelectedTemplate(theme.name)}
+                          key={theme?.name || index}
+                          name={theme?.name || 'Unknown'}
+                          titleColor={theme?.title_color || 'rgb(0, 0, 0)'}
+                          backgroundColor={theme?.background_color || 'rgb(255, 255, 255)'}
+                          accentColor={theme?.accent_color || 'rgb(100, 100, 100)'}
+                          isSelected={selectedTemplate === theme?.name}
+                          onClick={() => theme?.name && setSelectedTemplate(theme.name)}
                         />
                       ))}
                     </div>

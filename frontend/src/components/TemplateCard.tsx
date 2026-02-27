@@ -54,7 +54,7 @@ export function TemplateCard({
       </div>
 
       <div className="template-card-footer">
-        <span className="template-card-name">{name.toUpperCase()}</span>
+        <span className="template-card-name">{name?.toUpperCase() || 'TEMPLATE'}</span>
       </div>
     </div>
   );
