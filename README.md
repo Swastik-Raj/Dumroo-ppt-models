@@ -68,12 +68,20 @@ The frontend will run on `http://localhost:5173`
 8. Navigate between slides using the sidebar or Previous/Next buttons
 9. Click "Download Presentation" to get your `.pptx` file
 
-## Available Themes
+## Available Design Templates
 
-- Education Light
-- Dark Tech
-- Corporate Blue
-- Minimal
+10 professionally designed themes inspired by modern design trends:
+
+- **Modern Minimal** - Clean, sophisticated design with black and white aesthetics
+- **Bold & Vibrant** - Eye-catching design with bright, energetic colors
+- **Corporate Professional** - Traditional business aesthetic with blue tones
+- **Creative Gradient** - Modern design with gradient accents and vibrant colors
+- **Dark Mode Elegant** - Sophisticated dark theme with gold accents
+- **Ocean Blue** - Calming blue tones inspired by ocean depths
+- **Warm Sunset** - Warm orange and amber tones with cream background
+- **Fresh Green** - Natural green tones promoting growth and sustainability
+- **Soft Pastel** - Gentle pastel colors with lavender accents
+- **Tech Startup** - Modern tech aesthetic with blue and gray tones
 
 ## Command Line Usage
 

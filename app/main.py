@@ -11,7 +11,8 @@ from fastapi.responses import FileResponse
 from app.config import settings
 from app.models import GenerateRequest
 from app.pipeline import generate_pptx_for_topic
-from app.ppt.theme import THEMES
+from app.ppt.theme import available_themes
+from app.templates import get_all_templates
 
 app = FastAPI(title="AI-Assisted PPT Generator")
 
@@ -33,7 +34,12 @@ def health() -> dict:
 
 @app.get("/api/themes")
 def get_themes() -> dict:
-    return {"themes": list(THEMES.keys())}
+    return {"themes": available_themes()}
+
+
+@app.get("/api/templates")
+def get_templates() -> dict:
+    return {"templates": get_all_templates()}
 
 
 @app.post("/api/generate")
@@ -73,7 +79,7 @@ def generate_preview(req: GenerateRequest) -> dict:
         return {
             "presentation_id": presentation_id,
             "topic": req.topic,
-            "theme": req.theme or "Education Light",
+            "theme": req.theme or "Modern Minimal",
             "slides": slides
         }
     except Exception as e:

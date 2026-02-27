@@ -6,7 +6,7 @@ from pydantic import BaseModel
 class GenerateRequest(BaseModel):
     topic: str
     slides: int = 5
-    theme: str = "Education Light"
+    theme: str = "Modern Minimal"
 
 
 class SlideData(BaseModel):
