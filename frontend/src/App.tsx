@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import './App.css';
+import { TemplateCard } from './components/TemplateCard';
+import './components/TemplateCard.css';
 
 interface Slide {
   id: number;
@@ -15,6 +17,13 @@ interface PreviewData {
   topic: string;
   theme: string;
   slides: Slide[];
+}
+
+interface ThemeDetail {
+  name: string;
+  title_color: string;
+  background_color: string;
+  accent_color: string;
 }
 
 const API_URL = 'http://localhost:8000';
@@ -37,7 +46,7 @@ function App() {
   const [error, setError] = useState('');
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [downloading, setDownloading] = useState(false);
-  const [themes, setThemes] = useState<string[]>([]);
+  const [themes, setThemes] = useState<ThemeDetail[]>([]);
 
 
   useEffect(() => {
@@ -46,7 +55,7 @@ function App() {
       .then(data => {
         setThemes(data.themes);
         if (data.themes.length > 0) {
-          setSelectedTemplate(data.themes[0]);
+          setSelectedTemplate(data.themes[0].name);
         }
       })
       .catch(err => console.error('Failed to fetch themes:', err));
@@ -254,25 +263,26 @@ function App() {
                   </small>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">
+                <div className="templates-section">
+                  <label className="templates-label">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="2" fill="none"/>
                     </svg>
-                    Design Theme
+                    Choose a Template
                   </label>
-                  <select
-                    className="form-select"
-                    value={selectedTemplate}
-                    onChange={(e) => setSelectedTemplate(e.target.value)}
-                  >
+                  <div className="templates-grid">
                     {themes.map((theme) => (
-                      <option key={theme} value={theme}>{theme}</option>
+                      <TemplateCard
+                        key={theme.name}
+                        name={theme.name}
+                        titleColor={theme.title_color}
+                        backgroundColor={theme.background_color}
+                        accentColor={theme.accent_color}
+                        isSelected={selectedTemplate === theme.name}
+                        onClick={() => setSelectedTemplate(theme.name)}
+                      />
                     ))}
-                  </select>
-                  <small style={{ fontSize: '0.8125rem', color: 'var(--text-tertiary)', marginTop: 'var(--space-1)', display: 'block' }}>
-                    Choose from professionally designed themes inspired by modern design trends
-                  </small>
+                  </div>
                 </div>
 
                 <div className="form-row">

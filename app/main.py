@@ -34,7 +34,20 @@ def health() -> dict:
 
 @app.get("/api/themes")
 def get_themes() -> dict:
-    return {"themes": available_themes()}
+    from app.ppt.theme import THEME_PRESETS
+
+    themes_with_details = []
+    for theme_name in available_themes():
+        theme = THEME_PRESETS.get(theme_name)
+        if theme:
+            themes_with_details.append({
+                "name": theme.name,
+                "title_color": f"rgb({theme.title_rgb[0]}, {theme.title_rgb[1]}, {theme.title_rgb[2]})",
+                "background_color": f"rgb({theme.background_rgb[0]}, {theme.background_rgb[1]}, {theme.background_rgb[2]})",
+                "accent_color": f"rgb({theme.accent_rgb[0]}, {theme.accent_rgb[1]}, {theme.accent_rgb[2]})",
+            })
+
+    return {"themes": themes_with_details}
 
 
 @app.get("/api/templates")
