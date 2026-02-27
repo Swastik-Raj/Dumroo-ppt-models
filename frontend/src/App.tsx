@@ -50,6 +50,19 @@ function App() {
 
 
   useEffect(() => {
+    const mockThemes: ThemeDetail[] = [
+      { name: "Modern Minimal", title_color: "rgb(26, 26, 26)", background_color: "rgb(255, 255, 255)", accent_color: "rgb(10, 10, 10)" },
+      { name: "Bold & Vibrant", title_color: "rgb(255, 107, 107)", background_color: "rgb(255, 255, 255)", accent_color: "rgb(78, 205, 196)" },
+      { name: "Corporate Professional", title_color: "rgb(0, 59, 92)", background_color: "rgb(255, 255, 255)", accent_color: "rgb(0, 102, 161)" },
+      { name: "Creative Gradient", title_color: "rgb(108, 92, 231)", background_color: "rgb(255, 255, 255)", accent_color: "rgb(0, 184, 148)" },
+      { name: "Dark Mode Elegant", title_color: "rgb(255, 255, 255)", background_color: "rgb(26, 26, 26)", accent_color: "rgb(255, 215, 0)" },
+      { name: "Ocean Blue", title_color: "rgb(12, 74, 110)", background_color: "rgb(255, 255, 255)", accent_color: "rgb(14, 165, 233)" },
+      { name: "Warm Sunset", title_color: "rgb(124, 45, 18)", background_color: "rgb(255, 251, 235)", accent_color: "rgb(249, 115, 22)" },
+      { name: "Fresh Green", title_color: "rgb(20, 83, 45)", background_color: "rgb(255, 255, 255)", accent_color: "rgb(34, 197, 94)" },
+      { name: "Soft Pastel", title_color: "rgb(91, 33, 182)", background_color: "rgb(250, 245, 255)", accent_color: "rgb(168, 85, 247)" },
+      { name: "Tech Startup", title_color: "rgb(30, 41, 59)", background_color: "rgb(248, 250, 252)", accent_color: "rgb(59, 130, 246)" },
+    ];
+
     fetch(`${API_URL}/api/themes`)
       .then(res => res.json())
       .then(data => {
@@ -62,7 +75,11 @@ function App() {
           }
         }
       })
-      .catch(err => console.error('Failed to fetch themes:', err));
+      .catch(err => {
+        console.error('Failed to fetch themes:', err);
+        setThemes(mockThemes);
+        setSelectedTemplate(mockThemes[0].name);
+      });
   }, []);
 
   const handleGenerate = async () => {
