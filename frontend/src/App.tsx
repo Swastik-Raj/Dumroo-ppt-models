@@ -53,6 +53,7 @@ function App() {
     fetch(`${API_URL}/api/themes`)
       .then(res => res.json())
       .then(data => {
+        console.log('Themes data received:', data);
         setThemes(data.themes);
         if (data.themes.length > 0) {
           setSelectedTemplate(data.themes[0].name);
@@ -270,19 +271,25 @@ function App() {
                     </svg>
                     Choose a Template
                   </label>
-                  <div className="templates-grid">
-                    {themes.map((theme) => (
-                      <TemplateCard
-                        key={theme.name}
-                        name={theme.name}
-                        titleColor={theme.title_color}
-                        backgroundColor={theme.background_color}
-                        accentColor={theme.accent_color}
-                        isSelected={selectedTemplate === theme.name}
-                        onClick={() => setSelectedTemplate(theme.name)}
-                      />
-                    ))}
-                  </div>
+                  {themes.length === 0 ? (
+                    <div style={{ padding: 'var(--space-4)', color: 'var(--text-tertiary)', fontSize: '0.875rem' }}>
+                      Loading templates...
+                    </div>
+                  ) : (
+                    <div className="templates-grid">
+                      {themes.map((theme) => (
+                        <TemplateCard
+                          key={theme.name}
+                          name={theme.name}
+                          titleColor={theme.title_color}
+                          backgroundColor={theme.background_color}
+                          accentColor={theme.accent_color}
+                          isSelected={selectedTemplate === theme.name}
+                          onClick={() => setSelectedTemplate(theme.name)}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-row">
