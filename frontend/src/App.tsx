@@ -63,22 +63,25 @@ function App() {
       { name: "Tech Startup", title_color: "rgb(30, 41, 59)", background_color: "rgb(248, 250, 252)", accent_color: "rgb(59, 130, 246)" },
     ];
 
+    setThemes(mockThemes);
+    setSelectedTemplate(mockThemes[0].name);
+
     fetch(`${API_URL}/api/themes`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
         console.log('Themes data received:', data);
-        console.log('First theme:', data.themes?.[0]);
-        if (data.themes && Array.isArray(data.themes)) {
+        if (data.themes && Array.isArray(data.themes) && data.themes.length > 0) {
           setThemes(data.themes);
-          if (data.themes.length > 0) {
-            setSelectedTemplate(data.themes[0].name);
-          }
+          setSelectedTemplate(data.themes[0].name);
         }
       })
       .catch(err => {
-        console.error('Failed to fetch themes:', err);
-        setThemes(mockThemes);
-        setSelectedTemplate(mockThemes[0].name);
+        console.error('Failed to fetch themes from API, using mock data:', err);
       });
   }, []);
 
