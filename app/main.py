@@ -72,26 +72,40 @@ def generate(req: GenerateRequest) -> FileResponse:
 @app.post("/api/generate/preview")
 def generate_preview(req: GenerateRequest) -> dict:
     try:
+        from app.ai.openai_client import generate_presentation_spec
+        from app.planner import normalize_presentation_spec
+        from app.config import settings
+
+        slide_count_final = req.slide_count or settings.default_slide_count
+
+        spec_raw = generate_presentation_spec(
+            topic=req.topic, slide_count=slide_count_final)
+        spec = normalize_presentation_spec(
+            spec_raw, topic=req.topic, slide_count=slide_count_final)
+
         pptx_path = generate_pptx_for_topic(
             topic=req.topic, slide_count=req.slide_count, theme_name=req.theme)
 
         presentation_id = str(uuid.uuid4())
-        presentations_store[presentation_id] = pptx_path
+        presentations_store[presentation_id] = {
+            "path": pptx_path,
+            "spec": spec
+        }
 
         slides = []
-        for i in range(req.slide_count or 5):
+        for i, slide_spec in enumerate(spec.slides):
             slides.append({
                 "id": i + 1,
-                "type": "content" if i > 0 else "intro",
-                "title": f"Slide {i + 1}",
-                "content": "Generated content",
-                "keywords": [],
+                "type": slide_spec.type,
+                "title": slide_spec.title,
+                "content": slide_spec.content,
+                "keywords": slide_spec.keywords,
                 "image_url": None
             })
 
         return {
             "presentation_id": presentation_id,
-            "topic": req.topic,
+            "topic": spec.title,
             "theme": req.theme or "Modern Minimal",
             "slides": slides
         }
@@ -104,7 +118,13 @@ def download_presentation(presentation_id: str) -> FileResponse:
     if presentation_id not in presentations_store:
         raise HTTPException(status_code=404, detail="Presentation not found")
 
-    pptx_path = presentations_store[presentation_id]
+    stored = presentations_store[presentation_id]
+
+    if isinstance(stored, dict):
+        pptx_path = stored["path"]
+    else:
+        pptx_path = stored
+
     path = Path(pptx_path)
 
     if not path.exists():
