@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 import { TemplateCard } from './components/TemplateCard';
+import { SlidePreview } from './components/SlidePreview';
 import './components/TemplateCard.css';
 
 interface Slide {
@@ -47,6 +48,7 @@ function App() {
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [themes, setThemes] = useState<ThemeDetail[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
 
 
   useEffect(() => {
@@ -120,6 +122,7 @@ function App() {
       console.log('Number of slides:', data.slides?.length);
       console.log('First slide:', data.slides?.[0]);
       setPreviewData(data);
+      setShowPreview(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred while generating the presentation');
     } finally {
@@ -154,6 +157,7 @@ function App() {
       window.URL.revokeObjectURL(url);
 
       setPreviewData(null);
+      setShowPreview(false);
       setTopic('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Download failed');
@@ -529,6 +533,16 @@ function App() {
             <p>Building your presentation...</p>
           </div>
         </div>
+      )}
+
+      {showPreview && previewData && (
+        <SlidePreview
+          presentationId={previewData.presentation_id}
+          topic={previewData.topic}
+          slides={previewData.slides}
+          onClose={() => setShowPreview(false)}
+          onDownload={handleDownload}
+        />
       )}
     </div>
   );
