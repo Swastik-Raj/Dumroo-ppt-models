@@ -120,6 +120,7 @@
 .slide-thumb-content {
   flex: 1;
   min-width: 0;
+  position: relative;
 }
 
 .slide-thumb-title {
@@ -129,6 +130,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding-right: var(--space-6);
 }
 
 .slide-thumb-type {
@@ -136,6 +138,113 @@
   color: var(--text-tertiary);
   text-transform: capitalize;
   margin-top: var(--space-1);
+}
+
+.thumb-edit-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: var(--space-1);
+  opacity: 0;
+  transition: all var(--transition-base);
+}
+
+.slide-thumb-content:hover .thumb-edit-btn {
+  opacity: 1;
+}
+
+.thumb-edit-btn:hover {
+  color: var(--brand-primary);
+}
+
+.slide-thumbnail.editing {
+  border-color: var(--brand-primary);
+  background: #EFF6FF;
+  cursor: default;
+}
+
+.slide-thumb-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.thumb-title-input {
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: inherit;
+}
+
+.thumb-title-input:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.thumb-content-input {
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 60px;
+}
+
+.thumb-content-input:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.thumb-editor-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+.thumb-btn {
+  padding: var(--space-1) var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.thumb-btn-save {
+  background: var(--brand-primary);
+  color: var(--text-inverse);
+}
+
+.thumb-btn-save:hover:not(:disabled) {
+  background: var(--brand-primary-dark);
+}
+
+.thumb-btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.thumb-btn-cancel {
+  background: var(--gray-200);
+  color: var(--text-secondary);
+}
+
+.thumb-btn-cancel:hover {
+  background: var(--gray-300);
 }
 
 .slide-viewer {

@@ -114,14 +114,49 @@ export function SlidePreview({ presentationId, topic, slides, onClose, onDownloa
               {localSlides.map((s, idx) => (
                 <div
                   key={s.id}
-                  className={`slide-thumbnail ${currentSlide === idx ? 'active' : ''}`}
-                  onClick={() => goToSlide(idx)}
+                  className={`slide-thumbnail ${currentSlide === idx ? 'active' : ''} ${editingSlide === idx ? 'editing' : ''}`}
                 >
                   <div className="slide-number">{idx + 1}</div>
-                  <div className="slide-thumb-content">
-                    <div className="slide-thumb-title">{s.title}</div>
-                    <div className="slide-thumb-type">{s.type}</div>
-                  </div>
+                  {editingSlide === idx ? (
+                    <div className="slide-thumb-editor">
+                      <input
+                        type="text"
+                        className="thumb-title-input"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        placeholder="Slide title"
+                      />
+                      <textarea
+                        className="thumb-content-input"
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        placeholder="Slide content"
+                        rows={4}
+                      />
+                      <div className="thumb-editor-actions">
+                        <button className="thumb-btn thumb-btn-save" onClick={handleSave} disabled={saving}>
+                          {saving ? '...' : '✓'}
+                        </button>
+                        <button className="thumb-btn thumb-btn-cancel" onClick={handleCancel}>
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="slide-thumb-content" onClick={() => goToSlide(idx)}>
+                      <div className="slide-thumb-title">{s.title}</div>
+                      <div className="slide-thumb-type">{s.type}</div>
+                      <button
+                        className="thumb-edit-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(idx);
+                        }}
+                      >
+                        ✎
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

@@ -48,16 +48,21 @@ Constraints:
 - Use exactly {slide_count} slides.
 
 Content rules (VERY IMPORTANT):
-- Analyze the provided content carefully and extract the most important points
-- If the content is a lesson plan, identify key learning objectives, topics, and concepts
-- If the content is plain text, break it down into logical sections that fit the slide format
+- Analyze the provided content carefully and extract ONLY the most important points
+- CRITICAL: If the input is very long (lesson plan, detailed text, etc.), YOU MUST break it down into multiple distinct slides
+- DO NOT put large blocks of text into a single slide
+- Extract key concepts, activities, and objectives and distribute them across slides
+- Each slide should focus on ONE main idea or concept
+- If the content is a lesson plan with multiple sections (Engage, Explore, Explain, etc.), create a separate slide for EACH section
+- If there are multiple activities or steps, create a separate slide for EACH activity/step
 - Titles must be short (3–7 words) and specific. Maximum 60 characters.
 - For type "intro": 1–2 sentences, plain text. Maximum 200 characters total.
-- For type "process": write 4–6 bullet points as newline-separated lines (no paragraphs). Each bullet maximum 100 characters. Example:
-    "content": "- Bullet 1\n- Bullet 2\n- Bullet 3"
-- For type "summary": write 4–6 bullet points as newline-separated lines (no paragraphs). Each bullet maximum 100 characters.
-- Keep all content concise and readable. Avoid overly long sentences.
+- For type "process": write 3–5 bullet points as newline-separated lines (no paragraphs). Each bullet maximum 80 characters. Example:
+    "content": "- Brief point 1\n- Brief point 2\n- Brief point 3"
+- For type "summary": write 3–5 bullet points as newline-separated lines (no paragraphs). Each bullet maximum 80 characters.
+- Keep all content concise and readable. If text is too long, SPLIT IT into multiple slides instead.
 - Preserve key information from the original content while making it presentation-friendly
+- REMEMBER: More slides with focused content is BETTER than fewer slides with too much text
 
 Image rules (VERY IMPORTANT):
 - For every slide except the flow diagram slide, include an `image_query` optimized for Unsplash (3–8 words).
@@ -97,12 +102,21 @@ def _detect_domain_hints(topic: str) -> str:
     topic_lower = topic.lower()
 
     # Lesson plan detection
-    if any(word in topic_lower for word in ["lesson plan", "learning objective", "students will", "grade", "curriculum", "classroom", "homework"]):
+    if any(word in topic_lower for word in ["lesson plan", "learning objective", "students will", "grade", "curriculum", "classroom", "homework", "engage", "explore", "explain", "elaborate", "evaluate"]):
         return (
             "Domain: Education/Lesson Plan\n"
-            "- Extract key learning objectives and structure them as slide topics\n"
-            "- Break down lesson activities into clear, sequential steps\n"
-            "- Highlight main concepts, vocabulary, and takeaways\n"
+            "CRITICAL INSTRUCTIONS FOR LESSON PLANS:\n"
+            "- DO NOT create one slide with all the lesson plan text\n"
+            "- Create SEPARATE slides for EACH major section (Engage, Explore, Explain, Elaborate, Evaluate, etc.)\n"
+            "- If there are multiple activities, create ONE slide per activity\n"
+            "- Extract the main concept/topic for the intro slide\n"
+            "- Create individual slides for:\n"
+            "  * Learning objectives (1 slide with 3-5 bullet points)\n"
+            "  * Each activity or lesson phase (1 slide each)\n"
+            "  * Key vocabulary or concepts (1 slide)\n"
+            "  * Assessment or evaluation (1 slide)\n"
+            "- Each slide should have a clear, focused title like 'Engage Activity', 'Core Concepts', 'Practice Exercise'\n"
+            "- Keep bullet points short and actionable\n"
             "- Use educational imagery (classroom, students, books, learning)\n"
             "- For flow diagrams, show the lesson progression or concept relationships\n"
             "- Image style should be 'educational', 'bright', 'engaging', 'classroom'"
