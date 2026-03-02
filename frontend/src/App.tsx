@@ -48,7 +48,6 @@ function App() {
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [themes, setThemes] = useState<ThemeDetail[]>([]);
-  const [showPreview, setShowPreview] = useState(false);
 
 
   useEffect(() => {
@@ -122,7 +121,6 @@ function App() {
       console.log('Number of slides:', data.slides?.length);
       console.log('First slide:', data.slides?.[0]);
       setPreviewData(data);
-      setShowPreview(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred while generating the presentation');
     } finally {
@@ -157,7 +155,6 @@ function App() {
       window.URL.revokeObjectURL(url);
 
       setPreviewData(null);
-      setShowPreview(false);
       setTopic('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Download failed');
@@ -469,60 +466,39 @@ function App() {
         </div>
 
         <div className="preview-panel">
-          <div className="panel-header">
-            <div className="panel-header-icon preview-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" fill="none"/>
-                <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" fill="none"/>
-              </svg>
-            </div>
-            <span className="panel-title">Preview</span>
-          </div>
-
-          <div className="preview-content">
-            {previewData ? (
-              <div className="preview-data">
-                <h3 className="preview-title">{previewData.topic}</h3>
-                <p className="preview-meta">
-                  Theme: {previewData.theme} • {previewData.slides.length} slides
-                </p>
-                <div className="preview-slides">
-                  {previewData.slides.map((slide) => (
-                    <div key={slide.id} className="preview-slide-item">
-                      <div className="preview-slide-number">{slide.id}</div>
-                      <div className="preview-slide-info">
-                        <div className="preview-slide-title">{slide.title}</div>
-                        <div className="preview-slide-type">{slide.type}</div>
-                      </div>
-                    </div>
-                  ))}
+          {previewData ? (
+            <SlidePreview
+              presentationId={previewData.presentation_id}
+              topic={previewData.topic}
+              slides={previewData.slides}
+              onClose={() => {
+                setPreviewData(null);
+              }}
+              onDownload={handleDownload}
+            />
+          ) : (
+            <>
+              <div className="panel-header">
+                <div className="panel-header-icon preview-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" fill="none"/>
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" fill="none"/>
+                  </svg>
                 </div>
-                <button className="download-button" onClick={handleDownload} disabled={downloading}>
-                  {downloading ? (
-                    <>
-                      <div className="spinner"></div>
-                      Downloading...
-                    </>
-                  ) : (
-                    <>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      Download Presentation
-                    </>
-                  )}
-                </button>
+                <span className="panel-title">Preview</span>
               </div>
-            ) : (
-              <div className="preview-empty">
-                <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#9CA3AF" strokeWidth="1.5" fill="none"/>
-                  <circle cx="12" cy="12" r="3" stroke="#9CA3AF" strokeWidth="1.5" fill="none"/>
-                </svg>
-                <p className="preview-empty-text">AI responses will appear here for preview and formatting</p>
+
+              <div className="preview-content">
+                <div className="preview-empty">
+                  <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#9CA3AF" strokeWidth="1.5" fill="none"/>
+                    <circle cx="12" cy="12" r="3" stroke="#9CA3AF" strokeWidth="1.5" fill="none"/>
+                  </svg>
+                  <p className="preview-empty-text">Your presentation will appear here for editing and preview</p>
+                </div>
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -533,16 +509,6 @@ function App() {
             <p>Building your presentation...</p>
           </div>
         </div>
-      )}
-
-      {showPreview && previewData && (
-        <SlidePreview
-          presentationId={previewData.presentation_id}
-          topic={previewData.topic}
-          slides={previewData.slides}
-          onClose={() => setShowPreview(false)}
-          onDownload={handleDownload}
-        />
       )}
     </div>
   );

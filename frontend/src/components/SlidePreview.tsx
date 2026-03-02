@@ -25,6 +25,7 @@ export function SlidePreview({ presentationId, topic, slides, onClose, onDownloa
   const [editContent, setEditContent] = useState('');
   const [localSlides, setLocalSlides] = useState(slides);
   const [saving, setSaving] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const handleEdit = (slideId: number) => {
     const slide = localSlides[slideId];
@@ -94,21 +95,32 @@ export function SlidePreview({ presentationId, topic, slides, onClose, onDownloa
     }
   };
 
+  const handleDownloadClick = async () => {
+    setDownloading(true);
+    try {
+      await onDownload();
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const slide = localSlides[currentSlide];
 
   return (
-    <div className="preview-overlay">
-      <div className="preview-container">
-        <div className="preview-header">
-          <h2>{topic}</h2>
-          <button className="close-button" onClick={onClose}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M18 6L6 18M6 6l12 12" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </button>
+    <div className="preview-inline-container">
+      <div className="preview-inline-header">
+        <div>
+          <h3 className="preview-inline-title">{topic}</h3>
+          <p className="preview-inline-meta">{localSlides.length} slides</p>
         </div>
+        <button className="inline-close-button" onClick={onClose} title="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M18 6L6 18M6 6l12 12" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </button>
+      </div>
 
-        <div className="preview-body">
+      <div className="preview-body">
           <div className="slides-sidebar">
             <div className="slides-list">
               {localSlides.map((s, idx) => (
@@ -248,19 +260,24 @@ export function SlidePreview({ presentationId, topic, slides, onClose, onDownloa
           </div>
         </div>
 
-        <div className="preview-footer">
-          <button className="btn btn-secondary" onClick={onClose}>
-            Cancel
-          </button>
-          <button className="btn btn-download" onClick={onDownload}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeWidth="2" strokeLinecap="round"/>
-              <polyline points="7 10 12 15 17 10" strokeWidth="2" strokeLinecap="round"/>
-              <line x1="12" y1="15" x2="12" y2="3" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            Download Presentation
-          </button>
-        </div>
+      <div className="preview-inline-footer">
+        <button className="btn btn-download" onClick={handleDownloadClick} disabled={downloading}>
+          {downloading ? (
+            <>
+              <div className="spinner-small"></div>
+              Downloading...
+            </>
+          ) : (
+            <>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeWidth="2" strokeLinecap="round"/>
+                <polyline points="7 10 12 15 17 10" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="12" y1="15" x2="12" y2="3" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+              Download Presentation
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
