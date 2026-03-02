@@ -1,11 +1,68 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from app.ai.prompt import mock_presentation, system_prompt, user_prompt
 from app.config import settings
 from app.models import PresentationSpec
+
+
+def _calculate_optimal_slide_count(topic: str, requested_count: int) -> int:
+    """Calculate optimal slide count based on content structure.
+
+    For lesson plans with multiple sections, we need more slides to avoid cramming.
+    This function detects structured content and recommends a minimum slide count.
+    """
+    topic_lower = topic.lower()
+
+    # Detect lesson plan sections
+    lesson_sections = []
+    section_patterns = [
+        r'\bengage\b.*?(?=\n\n|\nexplore|\nexplain|\nelaborate|\nevaluate|$)',
+        r'\bexplore\b.*?(?=\n\n|\nengage|\nexplain|\nelaborate|\nevaluate|$)',
+        r'\bexplain\b.*?(?=\n\n|\nengage|\nexplore|\nelaborate|\nevaluate|$)',
+        r'\belaborate\b.*?(?=\n\n|\nengage|\nexplore|\nexplain|\nevaluate|$)',
+        r'\bevaluate\b.*?(?=\n\n|\nengage|\nexplore|\nexplain|\nelaborate|$)',
+    ]
+
+    for pattern in section_patterns:
+        if re.search(pattern, topic_lower, re.DOTALL | re.IGNORECASE):
+            lesson_sections.append(pattern)
+
+    # Check for other indicators of structured content
+    has_objectives = 'learning objective' in topic_lower or 'students will' in topic_lower
+    has_materials = 'material' in topic_lower and ':' in topic
+    has_assessment = 'assessment' in topic_lower or 'evaluation' in topic_lower
+
+    # Count distinct activities/sections
+    section_count = len(lesson_sections)
+
+    # Calculate minimum needed slides for lesson plans
+    if section_count >= 3:  # Likely a 5E lesson plan
+        # Structure: Intro + Objectives + (5 sections) + Flow + Summary = 9 slides minimum
+        min_slides = 2 + section_count + 2  # intro + objectives + sections + flow + summary
+
+        if has_materials:
+            min_slides += 1
+        if has_assessment and section_count < 5:  # Don't double-count if Evaluate exists
+            min_slides += 1
+
+        # If user requested fewer slides than needed, recommend more
+        if requested_count < min_slides:
+            return min_slides
+
+    # For other long content, check paragraph/section count
+    paragraphs = topic.count('\n\n')
+    headings = topic.count('**') + topic.count('##')
+
+    if paragraphs > 5 or headings > 5:
+        min_slides = min(15, paragraphs + headings + 3)  # Cap at 15
+        if requested_count < min_slides:
+            return min_slides
+
+    return requested_count
 
 
 def _list_supported_models(client) -> list[str]:
@@ -167,23 +224,29 @@ def _generate_with_openai(topic: str, slide_count: int) -> PresentationSpec | No
 
 
 def generate_presentation_spec(topic: str, slide_count: int) -> PresentationSpec:
+    # Calculate optimal slide count based on content structure
+    optimal_count = _calculate_optimal_slide_count(topic, slide_count)
+
+    # Use the higher of requested or calculated count
+    actual_count = max(slide_count, optimal_count)
+
     provider = (settings.ai_provider or "auto").strip().lower()
 
     # Route based on explicit provider selection.
     if provider == "gemini":
-        spec = _generate_with_gemini(topic, slide_count)
-        return spec or PresentationSpec.model_validate(mock_presentation(topic, slide_count))
+        spec = _generate_with_gemini(topic, actual_count)
+        return spec or PresentationSpec.model_validate(mock_presentation(topic, actual_count))
     if provider == "openai":
-        spec = _generate_with_openai(topic, slide_count)
-        return spec or PresentationSpec.model_validate(mock_presentation(topic, slide_count))
+        spec = _generate_with_openai(topic, actual_count)
+        return spec or PresentationSpec.model_validate(mock_presentation(topic, actual_count))
 
     # Auto mode: try Gemini first (if configured), then OpenAI.
-    spec = _generate_with_gemini(topic, slide_count)
+    spec = _generate_with_gemini(topic, actual_count)
     if spec is not None:
         return spec
 
-    spec = _generate_with_openai(topic, slide_count)
+    spec = _generate_with_openai(topic, actual_count)
     if spec is not None:
         return spec
 
-    return PresentationSpec.model_validate(mock_presentation(topic, slide_count))
+    return PresentationSpec.model_validate(mock_presentation(topic, actual_count))
