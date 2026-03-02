@@ -66,6 +66,7 @@ def normalize_presentation_spec(
     - Ensures slide 1 is intro, last is summary
     - Ensures at least one flow slide with a basic diagram
     - Coerces process/summary content into newline bullets when possible
+    - Intelligently distributes content when slides need padding
     """
 
     from app.ai.prompt import mock_presentation
@@ -77,18 +78,46 @@ def normalize_presentation_spec(
     if not slides:
         return PresentationSpec.model_validate(mock_presentation(topic, slide_count))
 
-    # Enforce count by truncating/padding with simple process slides.
+    # Enforce count by truncating/padding intelligently
     if len(slides) > slide_count:
         slides = slides[:slide_count]
+
+    # Smart padding: instead of generic slides, try to expand existing content
     while len(slides) < slide_count:
-        slides.append(
-            SlideSpec(
+        # Find process slides with lots of content that could be split
+        splittable = None
+        for i, s in enumerate(slides):
+            if s.type == "process" and s.content:
+                lines = [ln.strip() for ln in s.content.split("\n") if ln.strip()]
+                if len(lines) > 6:  # More than 6 bullets can be split
+                    splittable = i
+                    break
+
+        if splittable is not None:
+            # Split this slide into two
+            s = slides[splittable]
+            lines = [ln.strip() for ln in s.content.split("\n") if ln.strip()]
+            mid = len(lines) // 2
+            first_half = "\n".join(lines[:mid])
+            second_half = "\n".join(lines[mid:])
+
+            slides[splittable] = s.model_copy(update={"content": first_half})
+            slides.insert(splittable + 1, SlideSpec(
                 type="process",
-                title=f"Step {len(slides)}",
-                content="- Key point\n- Key point\n- Key point\n- Key point",
-                keywords=[topic, "steps", "process", "overview"],
+                title=f"{s.title} (cont.)",
+                content=second_half,
+                keywords=s.keywords,
+            ))
+        else:
+            # Add a generic process slide
+            slides.append(
+                SlideSpec(
+                    type="process",
+                    title=f"Additional Points",
+                    content="- Key point\n- Key point\n- Key point",
+                    keywords=[topic, "overview"],
+                )
             )
-        )
 
     # Slide 1 intro.
     if slides[0].type != "intro":
@@ -111,13 +140,13 @@ def normalize_presentation_spec(
             parts = [p.strip()
                      for p in text.replace("•", "").split(".") if p.strip()]
             if len(parts) >= 2:
-                text = "\n".join([f"- {p}" for p in parts[:6]])
+                text = "\n".join([f"- {p}" for p in parts[:8]])
             else:
                 text = f"- {text}"
         # Ensure bullet prefix.
         lines = [ln.strip() for ln in text.split("\n") if ln.strip()]
         fixed = []
-        for ln in lines[:8]:
+        for ln in lines[:10]:  # Allow up to 10 bullets, layouts will handle sizing
             if ln.startswith(("- ", "• ")):
                 fixed.append(ln.replace("• ", "- "))
             else:

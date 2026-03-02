@@ -16,26 +16,37 @@ def user_prompt(topic: str, slide_count: int) -> str:
     # Count paragraphs/sections to detect long input
     topic_length = len(topic)
     sections = topic.count('\n\n') + topic.count('**') + topic.count('##')
-    is_long_input = topic_length > 500 or sections > 3
+    paragraphs = len([p for p in topic.split('\n\n') if len(p.strip()) > 50])
+    is_long_input = topic_length > 500 or sections > 3 or paragraphs > 4
 
     extra_instruction = ""
     if is_long_input:
-        extra_instruction = """
+        extra_instruction = f"""
 ⚠️ CRITICAL: This is a LONG input with multiple sections/paragraphs.
 YOU MUST:
-1. Read through the ENTIRE input carefully
-2. Identify DISTINCT sections, activities, or topics
-3. Create ONE slide for EACH distinct section/activity/topic
-4. DO NOT combine multiple sections into one slide
-5. DO NOT create slides with more than 5 bullet points
-6. Distribute the content evenly across all {slide_count} slides
-7. If there are more sections than slides, combine only closely related items
+1. Read through the ENTIRE input carefully from beginning to end
+2. Identify DISTINCT sections, activities, topics, or concepts
+3. Create ONE slide for EACH distinct section/activity/topic - DO NOT SKIP ANY
+4. DO NOT combine multiple sections into one slide unless they are very brief
+5. DO NOT create slides with more than 5 bullet points - if you need more bullets, create another slide
+6. Distribute the content evenly across all {slide_count} slides - USE THEM ALL
+7. Extract the most important information from each section
+8. If there are more sections than available slides, combine only the smallest/most related items
+9. If there are fewer sections than slides, expand important sections across multiple slides
 
-EXAMPLE: If input has 8 activities/sections and you have 10 slides, create:
-- Slide 1: Intro
-- Slides 2-8: One slide per activity/section
-- Slide 9: Flow diagram showing the process
-- Slide 10: Summary
+SLIDE ALLOCATION STRATEGY for {slide_count} slides:
+- Slide 1: Intro/Title
+- Slides 2 to {slide_count - 2}: Content slides (one per major section/activity/concept)
+- Slide {slide_count - 1}: Flow diagram showing the overall process
+- Slide {slide_count}: Summary
+
+CONTENT EXTRACTION RULES:
+- Read each paragraph/section completely
+- Extract 3-5 key points from each section
+- Convert long sentences into concise bullets (max 80 chars each)
+- Preserve important details, examples, and numbers
+- Use specific titles that reflect the section content
+- DO NOT use generic titles like "Section 1" or "Content"
 """
 
     return f"""
@@ -74,14 +85,14 @@ Constraints:
 - Use exactly {slide_count} slides.
 
 Content rules (VERY IMPORTANT):
-- CRITICAL: Read the ENTIRE input first before creating any slides
-- If the input has multiple paragraphs, sections, or activities, create SEPARATE slides for each
+- CRITICAL: Read the ENTIRE input first before creating any slides - understand the full scope
+- If the input has multiple paragraphs, sections, or activities, create SEPARATE slides for each - DO NOT SKIP
 - DO NOT compress large amounts of text into a single slide
 - Each slide should contain ONE focused idea, activity, or concept
-- Maximum 5 bullet points per slide - if you need more, create another slide
-- If content has numbered steps (1., 2., 3...), create one slide per step or group
+- Maximum 5 bullet points per slide - if you need more, create another slide for continuation
+- If content has numbered steps (1., 2., 3...), create one slide per step or logical group
 - If content has headings/sections (**, ##, etc.), create one slide per section
-- Extract and separate: objectives, activities, concepts, examples, assessments
+- Extract and separate: objectives, materials, activities, concepts, examples, assessments, vocabulary
 - Titles must be short (3–7 words) and specific. Maximum 60 characters.
 - For type "intro": 1–2 sentences, plain text. Maximum 200 characters total.
 - For type "process": write 3–5 bullet points as newline-separated lines (no paragraphs). Each bullet maximum 80 characters. Example:
@@ -90,6 +101,7 @@ Content rules (VERY IMPORTANT):
 - Keep all content concise and readable. If you have too much text, CREATE MORE SLIDES.
 - Preserve key information from the original content while making it presentation-friendly
 - REMEMBER: {slide_count} slides with focused content is BETTER than cramming everything into fewer slides
+- NEVER leave slides unused - if you have {slide_count} slides available, USE ALL {slide_count} slides
 
 Image rules (VERY IMPORTANT):
 - For every slide except the flow diagram slide, include an `image_query` optimized for Unsplash (3–8 words).

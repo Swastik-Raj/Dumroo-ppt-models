@@ -123,19 +123,37 @@ def _add_bullets(slide, text: str, theme: Theme, left, top, width, height, *, fo
     total_chars = sum(len(ln) for ln in lines)
     num_lines = len(lines)
 
-    if total_chars > 1000 or num_lines > 8:
-        font_size = max(14, font_size - 6)
+    # More aggressive scaling for large content
+    if total_chars > 1200 or num_lines > 10:
+        font_size = 14
+    elif total_chars > 1000 or num_lines > 8:
+        font_size = 16
     elif total_chars > 800 or num_lines > 7:
-        font_size = max(16, font_size - 4)
+        font_size = 18
     elif total_chars > 500 or num_lines > 6:
-        font_size = max(18, font_size - 2)
+        font_size = 20
 
-    # Limit bullets to prevent overflow
-    max_bullets = 8
-    if font_size <= 16:
+    # Dynamic bullet limits based on font size
+    if font_size <= 14:
+        max_bullets = 12
+        max_chars = 150
+        line_spacing = 4
+    elif font_size <= 16:
         max_bullets = 10
-    elif font_size >= 22:
+        max_chars = 140
+        line_spacing = 5
+    elif font_size <= 18:
+        max_bullets = 8
+        max_chars = 130
+        line_spacing = 6
+    elif font_size <= 20:
         max_bullets = 7
+        max_chars = 120
+        line_spacing = 6
+    else:
+        max_bullets = 7
+        max_chars = 110
+        line_spacing = 6
 
     for i, line in enumerate(lines[:max_bullets]):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
@@ -146,7 +164,6 @@ def _add_bullets(slide, text: str, theme: Theme, left, top, width, height, *, fo
             cleaned = cleaned[2:].strip()
 
         # Dynamic truncation based on font size
-        max_chars = 140 if font_size <= 16 else 110
         if len(cleaned) > max_chars:
             cleaned = cleaned[:max_chars - 3] + "..."
 
@@ -157,7 +174,7 @@ def _add_bullets(slide, text: str, theme: Theme, left, top, width, height, *, fo
         p.font.size = Pt(font_size)
         _set_rgb(p.font.color, theme.body_rgb)
         try:
-            p.space_after = Pt(6)
+            p.space_after = Pt(line_spacing)
         except Exception:
             pass
 
