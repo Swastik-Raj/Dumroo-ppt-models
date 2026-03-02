@@ -76,6 +76,9 @@ def generate_preview(req: GenerateRequest) -> dict:
         from app.planner import normalize_presentation_spec
         from app.config import settings
 
+        print(f"[DEBUG] Generating preview for topic: {req.topic[:50]}...")
+        print(f"[DEBUG] Slide count: {req.slide_count}, Theme: {req.theme}")
+
         slide_count_final = req.slide_count or settings.default_slide_count
 
         spec_raw = generate_presentation_spec(
@@ -83,8 +86,13 @@ def generate_preview(req: GenerateRequest) -> dict:
         spec = normalize_presentation_spec(
             spec_raw, topic=req.topic, slide_count=slide_count_final)
 
+        print(f"[DEBUG] Generated spec with title: {spec.title}")
+        print(f"[DEBUG] Number of slides in spec: {len(spec.slides)}")
+
         pptx_path = generate_pptx_for_topic(
             topic=req.topic, slide_count=req.slide_count, theme_name=req.theme)
+
+        print(f"[DEBUG] PPTX generated at: {pptx_path}")
 
         presentation_id = str(uuid.uuid4())
         presentations_store[presentation_id] = {
@@ -94,6 +102,7 @@ def generate_preview(req: GenerateRequest) -> dict:
 
         slides = []
         for i, slide_spec in enumerate(spec.slides):
+            print(f"[DEBUG] Slide {i+1}: {slide_spec.title} ({slide_spec.type})")
             slides.append({
                 "id": i + 1,
                 "type": slide_spec.type,
@@ -103,13 +112,19 @@ def generate_preview(req: GenerateRequest) -> dict:
                 "image_url": None
             })
 
-        return {
+        response_data = {
             "presentation_id": presentation_id,
             "topic": spec.title,
             "theme": req.theme or "Modern Minimal",
             "slides": slides
         }
+
+        print(f"[DEBUG] Returning response with {len(slides)} slides")
+        return response_data
     except Exception as e:
+        import traceback
+        print(f"[ERROR] Exception in generate_preview: {e}")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 

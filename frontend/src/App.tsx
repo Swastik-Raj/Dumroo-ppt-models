@@ -116,6 +116,9 @@ function App() {
       }
 
       const data = await response.json();
+      console.log('Preview data received:', data);
+      console.log('Number of slides:', data.slides?.length);
+      console.log('First slide:', data.slides?.[0]);
       setPreviewData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred while generating the presentation');
