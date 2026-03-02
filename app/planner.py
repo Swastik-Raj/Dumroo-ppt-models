@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from pydantic import ValidationError
 
-from app.models import PresentationSpec, SlideSpec
+from app.models import DiagramSpec, PresentationSpec, SlideSpec
 
 
 @dataclass(frozen=True)
@@ -134,7 +134,7 @@ def normalize_presentation_spec(
             update={
                 "type": "flow",
                 "title": "Process Flow",
-                "diagram": {"nodes": nodes, "edges": edges},
+                "diagram": DiagramSpec(nodes=nodes, edges=edges),
             }
         )
 
