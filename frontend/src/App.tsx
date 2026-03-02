@@ -64,25 +64,31 @@ function App() {
       { name: "Tech Startup", title_color: "rgb(30, 41, 59)", background_color: "rgb(248, 250, 252)", accent_color: "rgb(59, 130, 246)" },
     ];
 
+    console.log('[THEMES] Setting mock themes:', mockThemes);
     setThemes(mockThemes);
     setSelectedTemplate(mockThemes[0].name);
+    console.log('[THEMES] Mock themes set, count:', mockThemes.length);
 
     fetch(`${API_URL}/api/themes`)
       .then(res => {
+        console.log('[THEMES] API response status:', res.status);
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
         return res.json();
       })
       .then(data => {
-        console.log('Themes data received:', data);
+        console.log('[THEMES] API data received:', data);
+        console.log('[THEMES] API themes array:', data.themes);
         if (data.themes && Array.isArray(data.themes) && data.themes.length > 0) {
+          console.log('[THEMES] Setting API themes, count:', data.themes.length);
+          console.log('[THEMES] First theme from API:', data.themes[0]);
           setThemes(data.themes);
           setSelectedTemplate(data.themes[0].name);
         }
       })
       .catch(err => {
-        console.error('Failed to fetch themes from API, using mock data:', err);
+        console.error('[THEMES] Failed to fetch themes from API, using mock data:', err);
       });
   }, []);
 
@@ -304,17 +310,21 @@ function App() {
                     </div>
                   ) : (
                     <div className="templates-grid">
-                      {themes.map((theme, index) => (
-                        <TemplateCard
-                          key={theme?.name || index}
-                          name={theme?.name || 'Unknown'}
-                          titleColor={theme?.title_color || 'rgb(0, 0, 0)'}
-                          backgroundColor={theme?.background_color || 'rgb(255, 255, 255)'}
-                          accentColor={theme?.accent_color || 'rgb(100, 100, 100)'}
-                          isSelected={selectedTemplate === theme?.name}
-                          onClick={() => theme?.name && setSelectedTemplate(theme.name)}
-                        />
-                      ))}
+                      {themes.map((theme, index) => {
+                        console.log(`[RENDER] Theme ${index}:`, theme);
+                        console.log(`[RENDER] Theme name: "${theme?.name}"`);
+                        return (
+                          <TemplateCard
+                            key={theme?.name || index}
+                            name={theme?.name || 'Unknown'}
+                            titleColor={theme?.title_color || 'rgb(0, 0, 0)'}
+                            backgroundColor={theme?.background_color || 'rgb(255, 255, 255)'}
+                            accentColor={theme?.accent_color || 'rgb(100, 100, 100)'}
+                            isSelected={selectedTemplate === theme?.name}
+                            onClick={() => theme?.name && setSelectedTemplate(theme.name)}
+                          />
+                        );
+                      })}
                     </div>
                   )}
                 </div>

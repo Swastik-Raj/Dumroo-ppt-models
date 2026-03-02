@@ -15,6 +15,9 @@ export function TemplateCard({
   isSelected,
   onClick,
 }: TemplateCardProps) {
+  console.log('[TemplateCard] Rendering with name:', name);
+  console.log('[TemplateCard] Props:', { name, titleColor, backgroundColor, accentColor, isSelected });
+
   return (
     <div
       className={`template-card ${isSelected ? 'selected' : ''}`}
