@@ -43,9 +43,18 @@ export function TemplateCard({
           className="template-card-title"
           style={{ color: titleColor }}
         >
-          Presentation title
+          Presentation Title
         </div>
-        <div className="template-card-subtitle">Presentation subtitle</div>
+        <div
+          className="template-card-subtitle"
+          style={{
+            color: backgroundColor.includes('26, 26, 26') || backgroundColor.includes('30, 41, 59')
+              ? 'rgba(255, 255, 255, 0.6)'
+              : 'rgba(0, 0, 0, 0.5)'
+          }}
+        >
+          Subtitle Text
+        </div>
 
         <div
           className="template-card-accent-bar"
@@ -54,7 +63,7 @@ export function TemplateCard({
       </div>
 
       <div className="template-card-footer">
-        <span className="template-card-name">{name?.toUpperCase() || 'TEMPLATE'}</span>
+        <span className="template-card-name">{name || 'TEMPLATE'}</span>
       </div>
     </div>
   );

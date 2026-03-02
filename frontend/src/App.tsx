@@ -42,7 +42,7 @@ function App() {
   const [useGeneralKnowledge, setUseGeneralKnowledge] = useState(false);
   const [customInstructions, setCustomInstructions] = useState('');
   const [additionalCriteria, setAdditionalCriteria] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState('Education Light');
+  const [selectedTemplate, setSelectedTemplate] = useState('Modern Minimal');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
