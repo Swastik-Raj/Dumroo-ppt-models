@@ -19,120 +19,169 @@ def user_prompt(topic: str, slide_count: int) -> str:
     paragraphs = len([p for p in topic.split('\n\n') if len(p.strip()) > 50])
     is_long_input = topic_length > 500 or sections > 3 or paragraphs > 4
 
-    extra_instruction = ""
+    # Different approach for short vs long inputs
     if is_long_input:
-        extra_instruction = f"""
-⚠️ CRITICAL: This is a LONG input with multiple sections/paragraphs.
-YOU MUST:
-1. Read through the ENTIRE input carefully from beginning to end
-2. Identify DISTINCT sections, activities, topics, or concepts
-3. Create ONE slide for EACH distinct section/activity/topic - DO NOT SKIP ANY
-4. DO NOT combine multiple sections into one slide unless they are very brief
-5. DO NOT create slides with more than 5 bullet points - if you need more bullets, create another slide
-6. Distribute the content evenly across all {slide_count} slides - USE THEM ALL
-7. Extract the most important information from each section
-8. If there are more sections than available slides, combine only the smallest/most related items
-9. If there are fewer sections than slides, expand important sections across multiple slides
-
-SLIDE ALLOCATION STRATEGY for {slide_count} slides:
-- Slide 1: Intro/Title
-- Slides 2 to {slide_count - 2}: Content slides (one per major section/activity/concept)
-- Slide {slide_count - 1}: Flow diagram showing the overall process
-- Slide {slide_count}: Summary
-
-CONTENT EXTRACTION RULES:
-- Read each paragraph/section completely
-- Extract 3-5 key points from each section
-- Convert long sentences into concise bullets (max 80 chars each)
-- Preserve important details, examples, and numbers
-- Use specific titles that reflect the section content
-- DO NOT use generic titles like "Section 1" or "Content"
-"""
-
-    return f"""
-Analyze the following content and create a professional slide deck. The content may be a topic, lesson plan, course material, or detailed text:
+        # For detailed lesson plans or long content
+        return f"""
+You are creating a {slide_count}-slide presentation from the following detailed content:
 
 {topic}
 
 {domain_hints}
-{extra_instruction}
 
-Constraints:
-- Output MUST be valid JSON matching this shape:
+CRITICAL INSTRUCTIONS - READ CAREFULLY:
+This is a LONG, structured input. You MUST extract content properly:
+
+1. READ THE ENTIRE INPUT FIRST - understand all sections before creating slides
+2. IDENTIFY distinct sections/activities/topics in the content
+3. CREATE ONE SLIDE per major section - DO NOT skip sections
+4. DISTRIBUTE content evenly across all {slide_count} slides
+5. Each slide should have 3-5 focused bullet points (max 80 chars each)
+6. If a section has too much content, split it across 2 slides
+
+SLIDE STRUCTURE for {slide_count} slides:
+- Slide 1 (intro): Main title and overview
+- Slides 2 to {slide_count-2}: One slide per major section/activity/concept
+- Slide {slide_count-1} (flow): Process diagram showing the overall flow
+- Slide {slide_count} (summary): Key takeaways
+
+{_get_json_format_rules(slide_count)}
+"""
+    else:
+        # For short topics (1-2 sentences or single concept)
+        return f"""
+You are creating a {slide_count}-slide educational presentation about:
+
+{topic}
+
+{domain_hints}
+
+INSTRUCTIONS:
+Create a comprehensive, educational slide deck that teaches this topic from scratch.
+
+CONTENT STRATEGY:
+- Slide 1 (intro): Define the topic and why it's important
+- Slides 2-4: Break down the topic into key concepts/components (one concept per slide)
+- Slide 5: How it works or real-world examples
+- Middle slides: Deep dive into important aspects, processes, or applications
+- Slide {slide_count-1} (flow): Create a diagram showing the process/system/cycle
+- Slide {slide_count} (summary): Key takeaways and main points
+
+CONTENT QUALITY:
+- Be informative and educational - teach the audience about this topic
+- Use specific, factual information (not generic statements)
+- Each slide should cover ONE clear concept or idea
+- Include 3-5 bullet points per slide (each 60-80 characters)
+- Make content engaging and easy to understand
+- Build logically from basic concepts to more advanced ideas
+
+EXAMPLES OF GOOD CONTENT:
+✅ "Photosynthesis converts light energy into chemical energy"
+✅ "Chloroplasts contain chlorophyll which captures sunlight"
+✅ "Products: glucose (C6H12O6) and oxygen (O2)"
+
+EXAMPLES OF BAD CONTENT:
+❌ "Important process in plants"
+❌ "Key concept to understand"
+❌ "Main topic of discussion"
+
+{_get_json_format_rules(slide_count)}
+"""
+
+
+def _get_json_format_rules(slide_count: int) -> str:
+    return f"""
+
+JSON OUTPUT FORMAT - CRITICAL:
+Return ONLY valid JSON. No markdown, no commentary. Must match this structure:
+{{
+  "title": "Presentation Title (4-8 words)",
+  "slides": [
+    {{
+      "type": "intro"|"process"|"flow"|"summary",
+      "title": "Slide Title (3-7 words, max 60 chars)",
+      "content": "Content (see formatting rules below)",
+      "keywords": ["keyword1", "keyword2", "keyword3", "keyword4"],
+      "image_query": "photo search query (3-8 words)",
+      "image_subject": "main subject",
+      "image_setting": "context/setting",
+      "image_style": "style cue",
+      "diagram": {{ "nodes": [...], "edges": [[...]] }}
+    }}
+  ]
+}}
+
+SLIDE COUNT: Create exactly {slide_count} slides.
+
+SLIDE TYPE REQUIREMENTS:
+- Slide 1: MUST be type "intro"
+- Slide {slide_count}: MUST be type "summary"
+- At least 1 slide: MUST be type "flow" with a diagram (usually slide {slide_count-1})
+- All other slides: type "process"
+
+CONTENT FORMATTING BY TYPE:
+
+1. type "intro":
+   - Write 1-2 short sentences in plain text
+   - NO bullet points
+   - Maximum 200 characters total
+   - Example: "Machine learning enables computers to learn from data without explicit programming. It powers modern AI applications."
+
+2. type "process":
+   - Write 3-5 bullet points
+   - Each bullet starts with "- "
+   - Newline-separated (use \\n)
+   - Each bullet 60-80 characters max
+   - Be specific and informative, not generic
+   - Example: "- Algorithms learn patterns from training data\\n- Models improve accuracy through iteration\\n- Applications: recommendation systems, image recognition\\n- Requires large datasets for best results"
+
+3. type "summary":
+   - Write 3-5 bullet points (same format as process)
+   - Summarize key takeaways
+   - Example: "- Machine learning automates pattern recognition\\n- Three main types: supervised, unsupervised, reinforcement\\n- Powers modern AI applications\\n- Requires quality data and careful validation"
+
+4. type "flow":
+   - MUST include a diagram object
+   - Content can be brief or empty
+   - The diagram tells the story
+
+DIAGRAM REQUIREMENTS (for type "flow"):
+- Must have 4-6 nodes representing steps/components
+- Node names: SHORT (1-3 words, max 25 chars)
+- Edges: Array of [source, destination] pairs showing flow
+- Create logical left-to-right progression
+- Example for machine learning:
   {{
-    "title": string,
-    "slides": [
-      {{
-        "type": "intro"|"process"|"flow"|"summary",
-        "title": string,
-        "content": string,
-        "keywords": string[],
-        "image_query"?: string,
-        "image_alt"?: string,
-        "image_subject"?: string,
-        "image_setting"?: string,
-        "image_style"?: string,
-        "layout_preference"?: "image_left"|"bullets"|"title_full_image",
-        "emphasis"?: "high"|"medium"|"low",
-        "diagram"?: {{
-          "nodes": string[],
-          "edges": [ [string,string], ... ]
-        }}
-      }},
-      ...
-    ]
-  }}
-- Use exactly {slide_count} slides.
-
-Content rules (VERY IMPORTANT):
-- CRITICAL: Read the ENTIRE input first before creating any slides - understand the full scope
-- If the input has multiple paragraphs, sections, or activities, create SEPARATE slides for each - DO NOT SKIP
-- DO NOT compress large amounts of text into a single slide
-- Each slide should contain ONE focused idea, activity, or concept
-- Maximum 5 bullet points per slide - if you need more, create another slide for continuation
-- If content has numbered steps (1., 2., 3...), create one slide per step or logical group
-- If content has headings/sections (**, ##, etc.), create one slide per section
-- Extract and separate: objectives, materials, activities, concepts, examples, assessments, vocabulary
-- Titles must be short (3–7 words) and specific. Maximum 60 characters.
-- For type "intro": 1–2 sentences, plain text. Maximum 200 characters total.
-- For type "process": write 3–5 bullet points as newline-separated lines (no paragraphs). Each bullet maximum 80 characters. Example:
-    "content": "- Brief point 1\n- Brief point 2\n- Brief point 3"
-- For type "summary": write 3–5 bullet points as newline-separated lines (no paragraphs). Each bullet maximum 80 characters.
-- Keep all content concise and readable. If you have too much text, CREATE MORE SLIDES.
-- Preserve key information from the original content while making it presentation-friendly
-- REMEMBER: {slide_count} slides with focused content is BETTER than cramming everything into fewer slides
-- NEVER leave slides unused - if you have {slide_count} slides available, USE ALL {slide_count} slides
-
-Image rules (VERY IMPORTANT):
-- For every slide except the flow diagram slide, include an `image_query` optimized for Unsplash (3–8 words).
-- `image_query` must describe a real photo subject (avoid brand names, avoid long phrases).
-- Include `image_alt` as a short description of what the image should show.
-- If the topic is abstract, use photo-friendly subjects ("team onboarding", "office workflow", "customer signup").
-- Also include structured fields to improve relevance:
-    - `image_subject`: the main subject (e.g., "Indian independence march")
-    - `image_setting`: the setting/context (e.g., "historic street rally")
-    - `image_style`: style cue (e.g., "archival photo", "documentary")
-
-Diagram rules (VERY IMPORTANT):
-- Include at least 1 slide of type "flow".
-- For the flow slide: nodes must be 4–6 items and represent the real steps/components in order.
-- Node names must be SHORT (1-3 words, max 25 characters each).
-- Edges must show direction and mostly be a left-to-right chain (A->B->C...).
-- Edges format: [["Node1", "Node2"], ["Node2", "Node3"], ...]
-- Each edge array must have exactly 2 elements (source and destination).
-- If there is a branch, add at most one branch from a single node.
-- Example diagram:
-  {{
-    "nodes": ["Input", "Process", "Validate", "Output"],
-    "edges": [["Input", "Process"], ["Process", "Validate"], ["Validate", "Output"]]
+    "nodes": ["Raw Data", "Training", "Model", "Predictions", "Validation"],
+    "edges": [["Raw Data", "Training"], ["Training", "Model"], ["Model", "Predictions"], ["Predictions", "Validation"], ["Validation", "Training"]]
   }}
 
-Keywords rules:
-- Provide 4–8 keywords per slide.
+IMAGE REQUIREMENTS (all slides except flow):
+- image_query: 3-8 words, photo-friendly (e.g., "artificial intelligence neural network")
+- image_subject: main subject (e.g., "computer circuit board")
+- image_setting: context (e.g., "technology lab")
+- image_style: style (e.g., "modern digital")
+- Avoid brand names and abstract concepts
 
-Ordering rules:
-- Slide 1 must be type "intro".
-- Slide {slide_count} must be type "summary".
+TITLE REQUIREMENTS:
+- Presentation title: 4-8 words, engaging and descriptive
+- Slide titles: 3-7 words, max 60 characters
+- Be specific: "Neural Network Architecture" not "Overview"
+
+KEYWORDS:
+- 4-8 relevant keywords per slide
+- Use specific terms related to the content
+
+QUALITY STANDARDS:
+✅ DO: Use specific, factual, educational content
+✅ DO: Make each slide cover ONE clear concept
+✅ DO: Build logically from basics to advanced
+✅ DO: Use all {slide_count} slides effectively
+
+❌ DON'T: Use generic phrases like "important concept"
+❌ DON'T: Put more than 5 bullets on one slide
+❌ DON'T: Leave slides empty or underutilized
+❌ DON'T: Create vague or unclear content
 """.strip()
 
 
