@@ -213,12 +213,24 @@ export function SlidePreview({ presentationId, topic, slides, onClose, onDownloa
                   <h3 className="slide-title-display">{slide.title}</h3>
                   <div className="slide-content-text">
                     {(() => {
-                      console.log('[SlidePreview] Slide type:', slide.type);
-                      console.log('[SlidePreview] Raw content:', JSON.stringify(slide.content));
-                      console.log('[SlidePreview] Split lines:', slide.content.split('\n'));
-                      return slide.content.split('\n').map((line, idx) => {
+                      const lines = slide.content.split('\n');
+
+                      // For intro slides with single-line paragraphs, split at sentence boundaries
+                      if (slide.type === 'intro' && lines.length === 1 && lines[0].length > 100) {
+                        const sentences = lines[0]
+                          .split(/\.\s+/)
+                          .map(s => s.trim())
+                          .filter(s => s.length > 0)
+                          .map(s => s.endsWith('.') ? s : s + '.');
+
+                        return sentences.map((sentence, idx) => (
+                          <div key={idx} className="content-line">{sentence}</div>
+                        ));
+                      }
+
+                      // Standard rendering for other slides
+                      return lines.map((line, idx) => {
                         const trimmed = line.trim();
-                        console.log(`[SlidePreview] Line ${idx}:`, JSON.stringify(line), 'trimmed:', JSON.stringify(trimmed), 'starts with "- ":', trimmed.startsWith('- '));
                         if (!trimmed) return null;
 
                         if (trimmed.startsWith('- ')) {
