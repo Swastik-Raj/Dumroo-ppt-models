@@ -212,20 +212,25 @@ export function SlidePreview({ presentationId, topic, slides, onClose, onDownloa
                   <div className="slide-type-badge">{slide.type}</div>
                   <h3 className="slide-title-display">{slide.title}</h3>
                   <div className="slide-content-text">
-                    {slide.content.split('\n').map((line, idx) => {
-                      const trimmed = line.trim();
-                      if (!trimmed) return null;
+                    {(() => {
+                      console.log('[SlidePreview] Raw content:', JSON.stringify(slide.content));
+                      console.log('[SlidePreview] Split lines:', slide.content.split('\n'));
+                      return slide.content.split('\n').map((line, idx) => {
+                        const trimmed = line.trim();
+                        console.log(`[SlidePreview] Line ${idx}:`, JSON.stringify(line), 'trimmed:', JSON.stringify(trimmed), 'starts with "- ":', trimmed.startsWith('- '));
+                        if (!trimmed) return null;
 
-                      if (trimmed.startsWith('- ')) {
-                        return (
-                          <div key={idx} className="bullet-item">
-                            {trimmed.substring(2)}
-                          </div>
-                        );
-                      }
+                        if (trimmed.startsWith('- ')) {
+                          return (
+                            <div key={idx} className="bullet-item">
+                              {trimmed.substring(2)}
+                            </div>
+                          );
+                        }
 
-                      return <div key={idx} className="content-line">{trimmed}</div>;
-                    })}
+                        return <div key={idx} className="content-line">{trimmed}</div>;
+                      });
+                    })()}
                   </div>
                   {slide.keywords.length > 0 && (
                     <div className="slide-keywords">
