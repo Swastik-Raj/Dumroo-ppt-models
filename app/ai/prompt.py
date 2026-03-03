@@ -173,15 +173,15 @@ KEYWORDS:
 - Use specific terms related to the content
 
 QUALITY STANDARDS:
-✅ DO: Use specific, factual, educational content
-✅ DO: Make each slide cover ONE clear concept
-✅ DO: Build logically from basics to advanced
-✅ DO: Use all {slide_count} slides effectively
+DO: Use specific, factual, educational content
+DO: Make each slide cover ONE clear concept
+DO: Build logically from basics to advanced
+DO: Use all {slide_count} slides effectively
 
-❌ DON'T: Use generic phrases like "important concept"
-❌ DON'T: Put more than 5 bullets on one slide
-❌ DON'T: Leave slides empty or underutilized
-❌ DON'T: Create vague or unclear content
+DON'T: Use generic phrases like "important concept"
+DON'T: Put more than 5 bullets on one slide
+DON'T: Leave slides empty or underutilized
+DON'T: Create vague or unclear content
 """.strip()
 
 
@@ -193,7 +193,7 @@ def _detect_domain_hints(topic: str) -> str:
     if any(word in topic_lower for word in ["lesson plan", "learning objective", "students will", "grade", "curriculum", "classroom", "homework", "engage", "explore", "explain", "elaborate", "evaluate"]):
         return (
             "Domain: Education/Lesson Plan\n"
-            "🎯 CRITICAL INSTRUCTIONS FOR LESSON PLANS - READ CAREFULLY:\n\n"
+            "CRITICAL INSTRUCTIONS FOR LESSON PLANS - READ CAREFULLY:\n\n"
             "PARSING STRATEGY:\n"
             "1. First, read through the ENTIRE lesson plan from start to finish\n"
             "2. Identify all distinct sections: Engage, Explore, Explain, Elaborate, Evaluate, Materials, Objectives, Activities, etc.\n"
@@ -224,12 +224,12 @@ def _detect_domain_hints(topic: str) -> str:
             "IMAGES:\n"
             "- Use educational imagery: 'students learning', 'classroom activity', 'hands-on science experiment'\n"
             "- Image style: 'educational', 'bright', 'engaging', 'classroom', 'students'\n\n"
-            "❌ NEVER DO THIS:\n"
+            "NEVER DO THIS:\n"
             "- Put entire lesson plan in one slide\n"
             "- Create slides with more than 5 bullets\n"
             "- Combine multiple activities into one slide\n"
             "- Use generic titles like 'Content' or 'Information'\n\n"
-            "✅ ALWAYS DO THIS:\n"
+            "ALWAYS DO THIS:\n"
             "- One distinct section/activity = One slide\n"
             "- Clear, specific titles for each slide\n"
             "- Concise bullet points (not paragraphs)\n"
