@@ -83,8 +83,14 @@ function App() {
         if (data.themes && Array.isArray(data.themes) && data.themes.length > 0) {
           console.log('[THEMES] Setting API themes, count:', data.themes.length);
           console.log('[THEMES] First theme from API:', data.themes[0]);
-          setThemes(data.themes);
-          setSelectedTemplate(data.themes[0].name);
+
+          // Transform string array to object array if needed
+          const transformedThemes = data.themes.map((theme: string | { name: string }) =>
+            typeof theme === 'string' ? { name: theme } : theme
+          );
+
+          setThemes(transformedThemes);
+          setSelectedTemplate(transformedThemes[0].name);
         }
       })
       .catch(err => {
