@@ -255,13 +255,9 @@ def generate_presentation_spec(topic: str, slide_count: int) -> PresentationSpec
     print(f"\n[AI] Starting spec generation")
     print(f"[AI] Requested slide count: {slide_count}")
 
-    # Calculate optimal slide count based on content structure
-    optimal_count = _calculate_optimal_slide_count(topic, slide_count)
-    print(f"[AI] Calculated optimal count: {optimal_count}")
-
-    # Use the higher of requested or calculated count
-    actual_count = max(slide_count, optimal_count)
-    print(f"[AI] Actual count (max of requested/optimal): {actual_count}")
+    # Use the user's requested count directly
+    actual_count = slide_count
+    print(f"[AI] Using requested count: {actual_count}")
 
     provider = (settings.ai_provider or "auto").strip().lower()
     print(f"[AI] Provider: {provider}")
