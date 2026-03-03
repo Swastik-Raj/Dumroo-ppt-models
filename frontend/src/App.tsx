@@ -313,6 +313,9 @@ function App() {
                       {themes.map((theme, index) => {
                         console.log(`[RENDER] Theme ${index}:`, theme);
                         console.log(`[RENDER] Theme name: "${theme?.name}"`);
+                        console.log(`[RENDER] selectedTemplate: "${selectedTemplate}"`);
+                        console.log(`[RENDER] isSelected: ${selectedTemplate === theme?.name}`);
+                        console.log(`[RENDER] Comparison: "${selectedTemplate}" === "${theme?.name}"`);
                         return (
                           <TemplateCard
                             key={theme?.name || index}
@@ -321,7 +324,13 @@ function App() {
                             backgroundColor={theme?.background_color || 'rgb(255, 255, 255)'}
                             accentColor={theme?.accent_color || 'rgb(100, 100, 100)'}
                             isSelected={selectedTemplate === theme?.name}
-                            onClick={() => theme?.name && setSelectedTemplate(theme.name)}
+                            onClick={() => {
+                              console.log(`[CLICK] Clicked on theme: "${theme?.name}"`);
+                              if (theme?.name) {
+                                setSelectedTemplate(theme.name);
+                                console.log(`[CLICK] Set selectedTemplate to: "${theme.name}"`);
+                              }
+                            }}
                           />
                         );
                       })}
