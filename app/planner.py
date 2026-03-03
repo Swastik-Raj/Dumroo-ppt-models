@@ -69,21 +69,30 @@ def normalize_presentation_spec(
     - Intelligently distributes content when slides need padding
     """
 
+    print(f"\n[NORMALIZE] Starting normalization")
+    print(f"[NORMALIZE] Target slide count: {slide_count}")
+
     from app.ai.prompt import mock_presentation
 
     if spec is None:
+        print(f"[NORMALIZE] Spec is None, using mock")
         return PresentationSpec.model_validate(mock_presentation(topic, slide_count))
 
     slides = list(spec.slides or [])
+    print(f"[NORMALIZE] Input slides count: {len(slides)}")
     if not slides:
+        print(f"[NORMALIZE] No slides in spec, using mock")
         return PresentationSpec.model_validate(mock_presentation(topic, slide_count))
 
     # Enforce count by truncating/padding intelligently
     if len(slides) > slide_count:
+        print(f"[NORMALIZE] Truncating from {len(slides)} to {slide_count}")
         slides = slides[:slide_count]
 
     # Smart padding: instead of generic slides, try to expand existing content
+    print(f"[NORMALIZE] Current slides: {len(slides)}, need: {slide_count}")
     while len(slides) < slide_count:
+        print(f"[NORMALIZE] Padding: {len(slides)}/{slide_count}")
         # Find process slides with lots of content that could be split
         splittable = None
         for i, s in enumerate(slides):
@@ -168,15 +177,22 @@ def normalize_presentation_spec(
         )
 
     try:
-        return PresentationSpec.model_validate({"title": spec.title or topic, "slides": [s.model_dump() for s in slides]})
-    except ValidationError:
+        print(f"[NORMALIZE] Final slide count: {len(slides)}")
+        print(f"[NORMALIZE] Slide types: {[s.type for s in slides]}")
+        result = PresentationSpec.model_validate({"title": spec.title or topic, "slides": [s.model_dump() for s in slides]})
+        print(f"[NORMALIZE] Validation successful")
+        return result
+    except ValidationError as e:
+        print(f"[NORMALIZE] Validation failed: {e}")
         return PresentationSpec.model_validate(mock_presentation(topic, slide_count))
 
 
 def plan_slides(spec: PresentationSpec) -> list[SlidePlan]:
+    print(f"\n[PLAN] Planning slides for {len(spec.slides)} slides")
     plans: list[SlidePlan] = []
 
-    for slide in spec.slides:
+    for i, slide in enumerate(spec.slides):
+        print(f"[PLAN] Slide {i+1}: {slide.title} (type: {slide.type})")
         if slide.type == "intro":
             layout = "title_full_image"
             image_query = _image_query_for_slide(slide, spec.title)
