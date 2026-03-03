@@ -219,7 +219,7 @@ export function SlidePreview({ presentationId, topic, slides, onClose, onDownloa
                       if (trimmed.startsWith('- ')) {
                         return (
                           <div key={idx} className="bullet-item">
-                            • {trimmed.substring(2)}
+                            {trimmed.substring(2)}
                           </div>
                         );
                       }
