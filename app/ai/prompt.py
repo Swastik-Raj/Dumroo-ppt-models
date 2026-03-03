@@ -76,14 +76,14 @@ CONTENT QUALITY:
 - Build logically from basic concepts to more advanced ideas
 
 EXAMPLES OF GOOD CONTENT:
-✅ "Photosynthesis converts light energy into chemical energy"
-✅ "Chloroplasts contain chlorophyll which captures sunlight"
-✅ "Products: glucose (C6H12O6) and oxygen (O2)"
+"Photosynthesis converts light energy into chemical energy"
+"Chloroplasts contain chlorophyll which captures sunlight"
+"Products: glucose (C6H12O6) and oxygen (O2)"
 
 EXAMPLES OF BAD CONTENT:
-❌ "Important process in plants"
-❌ "Key concept to understand"
-❌ "Main topic of discussion"
+"Important process in plants"
+"Key concept to understand"
+"Main topic of discussion"
 
 {_get_json_format_rules(slide_count)}
 """
