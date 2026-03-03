@@ -51,6 +51,7 @@ function App() {
 
 
   useEffect(() => {
+    console.log('[THEMES] useEffect running - START');
     const mockThemes: ThemeDetail[] = [
       { name: "Modern Minimal", title_color: "rgb(26, 26, 26)", background_color: "rgb(255, 255, 255)", accent_color: "rgb(10, 10, 10)" },
       { name: "Bold & Vibrant", title_color: "rgb(255, 107, 107)", background_color: "rgb(255, 255, 255)", accent_color: "rgb(78, 205, 196)" },
@@ -85,9 +86,14 @@ function App() {
           console.log('[THEMES] First theme from API:', data.themes[0]);
 
           // Transform string array to object array if needed
-          const transformedThemes = data.themes.map((theme: string | ThemeDetail) =>
-            typeof theme === 'string' ? { name: theme } : theme
-          );
+          const transformedThemes = data.themes.map((theme: string | ThemeDetail) => {
+            if (typeof theme === 'string') {
+              // Find matching mock theme to preserve colors
+              const mockTheme = mockThemes.find(m => m.name === theme);
+              return mockTheme || { name: theme };
+            }
+            return theme;
+          });
 
           setThemes(transformedThemes);
           setSelectedTemplate(transformedThemes[0].name);
