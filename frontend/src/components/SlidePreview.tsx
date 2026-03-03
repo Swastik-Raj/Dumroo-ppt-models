@@ -213,6 +213,7 @@ export function SlidePreview({ presentationId, topic, slides, onClose, onDownloa
                   <h3 className="slide-title-display">{slide.title}</h3>
                   <div className="slide-content-text">
                     {(() => {
+                      console.log('[SlidePreview] Slide type:', slide.type);
                       console.log('[SlidePreview] Raw content:', JSON.stringify(slide.content));
                       console.log('[SlidePreview] Split lines:', slide.content.split('\n'));
                       return slide.content.split('\n').map((line, idx) => {
