@@ -30,20 +30,34 @@ You are creating a {slide_count}-slide presentation from the following detailed 
 {domain_hints}
 
 CRITICAL INSTRUCTIONS - READ CAREFULLY:
-This is a LONG, structured input. You MUST extract content properly:
+This is a LONG, structured input. You MUST extract and restructure content properly:
 
-1. READ THE ENTIRE INPUT FIRST - understand all sections before creating slides
-2. IDENTIFY distinct sections/activities/topics in the content
-3. CREATE ONE SLIDE per major section - DO NOT skip sections
-4. DISTRIBUTE content evenly across all {slide_count} slides
-5. Each slide should have 3-5 focused bullet points (max 80 chars each)
-6. If a section has too much content, split it across 2 slides
+PARSING STRATEGY:
+1. READ THE ENTIRE INPUT from start to finish
+2. IDENTIFY all distinct sections, activities, and major topics
+3. EXTRACT the key points from each section (ignore filler/instructions)
+4. CONDENSE each section into 3-5 focused bullet points
+5. CREATE one slide per major section/activity
+6. DISTRIBUTE all sections across the {slide_count} slides
+
+CONTENT TRANSFORMATION:
+- Long paragraphs → 3-5 bullet points (each 60-80 chars max)
+- Lists of items → Bullet points starting with "- "
+- Step-by-step procedures → Numbered or bulleted steps
+- Remove teacher instructions, meta-commentary, filler words
+- Extract the ESSENCE: what students/audience will DO and LEARN
 
 SLIDE STRUCTURE for {slide_count} slides:
-- Slide 1 (intro): Main title and overview
-- Slides 2 to {slide_count-2}: One slide per major section/activity/concept
-- Slide {slide_count-1} (flow): Process diagram showing the overall flow
-- Slide {slide_count} (summary): Key takeaways
+- Slide 1 (intro): Main title and topic overview (1-2 sentences, NO bullets)
+- Slides 2 to {slide_count-2}: One slide per major section/activity (3-5 bullets each)
+- Slide {slide_count-1} (flow): Process diagram showing overall flow/sequence
+- Slide {slide_count} (summary): Key takeaways (3-5 bullets)
+
+FORMATTING RULES - CRITICAL:
+✓ DO: "- Students will identify patterns\\n- Use manipulatives to demonstrate\\n- Work in collaborative groups"
+✗ DON'T: Put entire paragraphs as one bullet
+✗ DON'T: Create bullets longer than 80 characters
+✗ DON'T: Skip sections from the original content
 
 {_get_json_format_rules(slide_count)}
 """

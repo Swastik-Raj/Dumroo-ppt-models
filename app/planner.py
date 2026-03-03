@@ -144,22 +144,50 @@ def normalize_presentation_spec(
         text = (s.content or "").strip()
         if not text:
             text = "- Key point\n- Key point\n- Key point\n- Key point"
-        # If it's a paragraph, split into sentence-ish bullets.
-        if "\n" not in text:
-            parts = [p.strip()
-                     for p in text.replace("•", "").split(".") if p.strip()]
+
+        # If it's a long paragraph (200+ chars, no newlines), try to intelligently split
+        if "\n" not in text and len(text) > 200:
+            # Try splitting on sentence boundaries
+            parts = []
+            for sentence in text.replace("•", "").split("."):
+                sentence = sentence.strip()
+                if not sentence:
+                    continue
+                # If sentence is still too long, try splitting on commas or semicolons
+                if len(sentence) > 100:
+                    subparts = [p.strip() for p in sentence.replace(";", ",").split(",") if p.strip()]
+                    parts.extend(subparts[:3])  # Take first 3 parts
+                else:
+                    parts.append(sentence)
+            if parts:
+                text = "\n".join([f"- {p}" for p in parts[:8]])
+            else:
+                text = f"- {text[:80]}"  # Truncate if all else fails
+
+        # If it's a short paragraph, split into sentences
+        elif "\n" not in text and len(text) > 0:
+            parts = [p.strip() for p in text.replace("•", "").split(".") if p.strip()]
             if len(parts) >= 2:
                 text = "\n".join([f"- {p}" for p in parts[:8]])
             else:
                 text = f"- {text}"
-        # Ensure bullet prefix.
+
+        # Ensure bullet prefix and clean up
         lines = [ln.strip() for ln in text.split("\n") if ln.strip()]
         fixed = []
         for ln in lines[:10]:  # Allow up to 10 bullets, layouts will handle sizing
             if ln.startswith(("- ", "• ")):
-                fixed.append(ln.replace("• ", "- "))
+                cleaned = ln.replace("• ", "- ")
+                # Truncate overly long bullets
+                if len(cleaned) > 120:
+                    cleaned = cleaned[:117] + "..."
+                fixed.append(cleaned)
             else:
+                # Add bullet prefix and truncate if needed
+                if len(ln) > 120:
+                    ln = ln[:117] + "..."
                 fixed.append(f"- {ln}")
+
         slides[i] = s.model_copy(update={"content": "\n".join(fixed)})
 
     # Ensure at least one flow slide with a diagram.
