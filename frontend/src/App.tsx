@@ -85,7 +85,7 @@ function App() {
           console.log('[THEMES] First theme from API:', data.themes[0]);
 
           // Transform string array to object array if needed
-          const transformedThemes = data.themes.map((theme: string | { name: string }) =>
+          const transformedThemes = data.themes.map((theme: string | ThemeDetail) =>
             typeof theme === 'string' ? { name: theme } : theme
           );
 
