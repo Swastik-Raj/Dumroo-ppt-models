@@ -39,7 +39,7 @@ async def get_themes():
 @app.post("/api/generate/preview", response_model=PreviewResponse)
 async def generate_preview(request: GenerateRequest):
     try:
-        slide_count_final = request.slides or settings.default_slide_count
+        slide_count_final = request.slide_count or settings.default_slide_count
 
         spec_raw = generate_presentation_spec(
             topic=request.topic, slide_count=slide_count_final

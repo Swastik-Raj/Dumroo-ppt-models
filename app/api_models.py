@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 class GenerateRequest(BaseModel):
     topic: str
-    slides: int = 5
+    slide_count: int = 5
     theme: str = "Modern Minimal"
 
 
