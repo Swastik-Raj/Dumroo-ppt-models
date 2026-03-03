@@ -72,17 +72,22 @@ def generate(req: GenerateRequest) -> FileResponse:
 @app.post("/api/generate/preview")
 def generate_preview(req: GenerateRequest) -> dict:
     try:
-        from app.ai.openai_client import generate_presentation_spec
+        from app.ai.openai_client import generate_presentation_spec, _calculate_optimal_slide_count
         from app.planner import normalize_presentation_spec
         from app.config import settings
 
         print(f"[DEBUG] Generating preview for topic: {req.topic[:50]}...")
         print(f"[DEBUG] Slide count: {req.slide_count}, Theme: {req.theme}")
 
-        slide_count_final = req.slide_count or settings.default_slide_count
+        slide_count_requested = req.slide_count or settings.default_slide_count
+
+        # Calculate optimal count and use it for normalization
+        optimal_count = _calculate_optimal_slide_count(req.topic, slide_count_requested)
+        slide_count_final = max(slide_count_requested, optimal_count)
+        print(f"[DEBUG] Using slide count: {slide_count_final} (requested: {slide_count_requested}, optimal: {optimal_count})")
 
         spec_raw = generate_presentation_spec(
-            topic=req.topic, slide_count=slide_count_final)
+            topic=req.topic, slide_count=slide_count_requested)
         spec = normalize_presentation_spec(
             spec_raw, topic=req.topic, slide_count=slide_count_final)
 
