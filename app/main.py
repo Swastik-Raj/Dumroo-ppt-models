@@ -117,10 +117,21 @@ def generate_preview(req: GenerateRequest) -> dict:
                 "image_url": None
             })
 
+        # Include full theme details in response
+        from app.ppt.theme import THEME_PRESETS
+        theme_name = req.theme or "Modern Minimal"
+        theme = THEME_PRESETS.get(theme_name)
+        theme_data = {
+            "name": theme.name,
+            "title_color": f"rgb({theme.title_rgb[0]}, {theme.title_rgb[1]}, {theme.title_rgb[2]})",
+            "background_color": f"rgb({theme.background_rgb[0]}, {theme.background_rgb[1]}, {theme.background_rgb[2]})",
+            "accent_color": f"rgb({theme.accent_rgb[0]}, {theme.accent_rgb[1]}, {theme.accent_rgb[2]})",
+        } if theme else {"name": theme_name}
+
         response_data = {
             "presentation_id": presentation_id,
             "topic": spec.title,
-            "theme": req.theme or "Modern Minimal",
+            "theme": theme_data,
             "slides": slides
         }
 
