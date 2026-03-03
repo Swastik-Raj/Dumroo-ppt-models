@@ -211,7 +211,22 @@ export function SlidePreview({ presentationId, topic, slides, onClose, onDownloa
                 <div className="slide-content-display">
                   <div className="slide-type-badge">{slide.type}</div>
                   <h3 className="slide-title-display">{slide.title}</h3>
-                  <div className="slide-content-text">{slide.content}</div>
+                  <div className="slide-content-text">
+                    {slide.content.split('\n').map((line, idx) => {
+                      const trimmed = line.trim();
+                      if (!trimmed) return null;
+
+                      if (trimmed.startsWith('- ')) {
+                        return (
+                          <div key={idx} className="bullet-item">
+                            • {trimmed.substring(2)}
+                          </div>
+                        );
+                      }
+
+                      return <div key={idx} className="content-line">{trimmed}</div>;
+                    })}
+                  </div>
                   {slide.keywords.length > 0 && (
                     <div className="slide-keywords">
                       {slide.keywords.map((kw, idx) => (

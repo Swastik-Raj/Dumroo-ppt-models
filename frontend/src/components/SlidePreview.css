@@ -282,8 +282,18 @@
   font-size: 1.125rem;
   line-height: 1.75;
   color: var(--text-secondary);
-  white-space: pre-wrap;
   margin-bottom: var(--space-8);
+}
+
+.bullet-item {
+  margin-bottom: var(--space-3);
+  padding-left: var(--space-4);
+  line-height: 1.6;
+}
+
+.content-line {
+  margin-bottom: var(--space-3);
+  line-height: 1.6;
 }
 
 .slide-keywords {
