@@ -110,7 +110,9 @@ export function SlidePreview({ presentationId, topic, slides, onClose, onDownloa
     <div className="preview-inline-container">
       <div className="preview-inline-header">
         <div>
-          <h3 className="preview-inline-title">{topic}</h3>
+          <h3 className="preview-inline-title">
+            {topic.length > 100 ? topic.substring(0, 100) + '...' : topic}
+          </h3>
           <p className="preview-inline-meta">{localSlides.length} slides</p>
         </div>
         <button className="inline-close-button" onClick={onClose} title="Close">

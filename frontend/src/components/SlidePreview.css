@@ -20,6 +20,9 @@
   font-size: 1.125rem;
   font-weight: 700;
   color: var(--text-primary);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 600px;
 }
 
 .preview-inline-meta {
