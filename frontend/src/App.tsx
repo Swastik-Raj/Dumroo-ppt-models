@@ -124,9 +124,6 @@ function App() {
       }
 
       const data = await response.json();
-      console.log('[App] Preview data received:', data);
-      console.log('[App] Slides count:', data.slides?.length);
-      console.log('[App] Topic length:', data.topic?.length);
       setPreviewData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred while generating the presentation');
