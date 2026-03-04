@@ -51,7 +51,11 @@ function App() {
 
 
   useEffect(() => {
-    console.log('[THEMES] useEffect running - START');
+    console.log('='.repeat(80));
+    console.log('[THEMES] ==================== THEME LOADING START ====================');
+    console.log('[THEMES] API_URL:', API_URL);
+    console.log('[THEMES] Full API endpoint:', `${API_URL}/api/themes`);
+
     const mockThemes: ThemeDetail[] = [
       { name: "Modern Minimal", title_color: "rgb(26, 26, 26)", background_color: "rgb(255, 255, 255)", accent_color: "rgb(10, 10, 10)" },
       { name: "Bold & Vibrant", title_color: "rgb(255, 107, 107)", background_color: "rgb(255, 255, 255)", accent_color: "rgb(78, 205, 196)" },
@@ -65,42 +69,78 @@ function App() {
       { name: "Tech Startup", title_color: "rgb(30, 41, 59)", background_color: "rgb(248, 250, 252)", accent_color: "rgb(59, 130, 246)" },
     ];
 
-    console.log('[THEMES] Setting mock themes:', mockThemes);
+    console.log('[THEMES] Mock themes created. Count:', mockThemes.length);
+    console.log('[THEMES] First mock theme:', JSON.stringify(mockThemes[0], null, 2));
+    console.log('[THEMES] Last mock theme:', JSON.stringify(mockThemes[mockThemes.length - 1], null, 2));
+
+    console.log('[THEMES] Setting MOCK themes in state...');
     setThemes(mockThemes);
     setSelectedTemplate(mockThemes[0].name);
-    console.log('[THEMES] Mock themes set, count:', mockThemes.length);
+    console.log('[THEMES] MOCK themes set. Selected template:', mockThemes[0].name);
+    console.log('[THEMES] State should now contain', mockThemes.length, 'themes with full color data');
 
+    console.log('[THEMES] Starting API fetch...');
     fetch(`${API_URL}/api/themes`)
       .then(res => {
-        console.log('[THEMES] API response status:', res.status);
+        console.log('[THEMES API] ✓ Response received');
+        console.log('[THEMES API] Status:', res.status);
+        console.log('[THEMES API] Status Text:', res.statusText);
+        console.log('[THEMES API] OK:', res.ok);
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
         return res.json();
       })
       .then(data => {
-        console.log('[THEMES] API data received:', data);
-        console.log('[THEMES] API themes array:', data.themes);
+        console.log('[THEMES API] ✓ JSON parsed successfully');
+        console.log('[THEMES API] Full response data:', JSON.stringify(data, null, 2));
+        console.log('[THEMES API] themes array:', data.themes);
+        console.log('[THEMES API] themes type:', typeof data.themes);
+        console.log('[THEMES API] is array:', Array.isArray(data.themes));
+
         if (data.themes && Array.isArray(data.themes) && data.themes.length > 0) {
-          console.log('[THEMES] Setting API themes, count:', data.themes.length);
-          console.log('[THEMES] First theme from API:', data.themes[0]);
+          console.log('[THEMES API] ✓ Themes array is valid. Count:', data.themes.length);
+          console.log('[THEMES API] First theme from API:', JSON.stringify(data.themes[0], null, 2));
+          console.log('[THEMES API] Type of first theme:', typeof data.themes[0]);
 
           // Transform string array to object array if needed
-          const transformedThemes = data.themes.map((theme: string | ThemeDetail) => {
+          const transformedThemes = data.themes.map((theme: string | ThemeDetail, index: number) => {
+            console.log(`[THEMES API] Processing theme ${index}:`, theme, '(type:', typeof theme, ')');
             if (typeof theme === 'string') {
-              // Find matching mock theme to preserve colors
+              console.log(`[THEMES API] Theme is a string: "${theme}", looking up in mock themes...`);
               const mockTheme = mockThemes.find(m => m.name === theme);
-              return mockTheme || { name: theme };
+              if (mockTheme) {
+                console.log(`[THEMES API] ✓ Found matching mock theme:`, JSON.stringify(mockTheme, null, 2));
+                return mockTheme;
+              } else {
+                console.log(`[THEMES API] ✗ No matching mock theme found for "${theme}", using name-only object`);
+                return { name: theme };
+              }
             }
+            console.log(`[THEMES API] Theme is already an object, using as-is:`, theme);
             return theme;
           });
 
+          console.log('[THEMES API] Transformed themes:', JSON.stringify(transformedThemes, null, 2));
+          console.log('[THEMES API] Setting API themes in state...');
           setThemes(transformedThemes);
           setSelectedTemplate(transformedThemes[0].name);
+          console.log('[THEMES API] ✓ API themes set. Selected template:', transformedThemes[0].name);
+        } else {
+          console.log('[THEMES API] ✗ Invalid themes data, keeping mock themes');
+          console.log('[THEMES API] Reasons: themes exists?', !!data.themes, 'is array?', Array.isArray(data.themes), 'has length?', data.themes?.length > 0);
         }
       })
       .catch(err => {
-        console.error('[THEMES] Failed to fetch themes from API, using mock data:', err);
+        console.error('[THEMES API] ✗ ERROR - Failed to fetch themes from API');
+        console.error('[THEMES API] Error type:', err.constructor.name);
+        console.error('[THEMES API] Error message:', err.message);
+        console.error('[THEMES API] Full error:', err);
+        console.log('[THEMES API] Falling back to mock themes (already set)');
+      })
+      .finally(() => {
+        console.log('[THEMES] ==================== THEME LOADING END ====================');
+        console.log('='.repeat(80));
       });
   }, []);
 
@@ -325,12 +365,17 @@ function App() {
                     </div>
                   ) : (
                     <div className="templates-grid">
+                      {console.log('[RENDER GRID] ========== RENDERING TEMPLATE CARDS ==========')}
+                      {console.log('[RENDER GRID] Total themes:', themes.length)}
+                      {console.log('[RENDER GRID] All themes:', JSON.stringify(themes, null, 2))}
+                      {console.log('[RENDER GRID] Selected template:', selectedTemplate)}
                       {themes.map((theme, index) => {
                         console.log(`[RENDER] Theme ${index}:`, theme);
-                        console.log(`[RENDER] Theme name: "${theme?.name}"`);
-                        console.log(`[RENDER] selectedTemplate: "${selectedTemplate}"`);
-                        console.log(`[RENDER] isSelected: ${selectedTemplate === theme?.name}`);
-                        console.log(`[RENDER] Comparison: "${selectedTemplate}" === "${theme?.name}"`);
+                        console.log(`[RENDER] - name: "${theme?.name}"`);
+                        console.log(`[RENDER] - title_color: "${theme?.title_color}"`);
+                        console.log(`[RENDER] - background_color: "${theme?.background_color}"`);
+                        console.log(`[RENDER] - accent_color: "${theme?.accent_color}"`);
+                        console.log(`[RENDER] - isSelected: ${selectedTemplate === theme?.name}`);
                         return (
                           <TemplateCard
                             key={theme?.name || index}
